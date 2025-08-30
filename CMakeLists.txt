@@ -46,9 +46,9 @@ add_custom_target(embed_nmap ALL
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
-	"Discovr-GroupNumber.cpp"
-	"Discovr-GroupNumber.h"
-	${NMAP_CPP}
+	"src/Discovr-GroupNumber.cpp"
+	"src/Discovr-GroupNumber.h"
+	"${NMAP_CPP}"
 )
 
 # Ensure the embedded file is generated before building the executable

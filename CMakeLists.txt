@@ -23,7 +23,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nmap_binary)
 
-# === Create output folder for embedded files ===
+# === Create output folder for embedded nmap binary and dlls ===
 set(GENERATED_DIR ${CMAKE_SOURCE_DIR}/src/embedded)
 file(MAKE_DIRECTORY ${GENERATED_DIR})
 
@@ -31,6 +31,7 @@ file(MAKE_DIRECTORY ${GENERATED_DIR})
 set(NMAP_EXE "${nmap_binary_SOURCE_DIR}/nmap.exe")
 set(NMAP_CPP "${GENERATED_DIR}/nmap_embedded.cpp")
 
+# === Convert nmap.exe to cpp ===
 add_custom_command(
 	OUTPUT ${NMAP_CPP}
 	COMMAND xxd -i ${NMAP_EXE} > ${NMAP_CPP}
@@ -39,17 +40,46 @@ add_custom_command(
 	VERBATIM
 )
 
+# === nmap DLL folder ===
+set(DLL_DIR "${nmap_binary_SOURCE_DIR}")
+
+# === Collect nmap DLLs ===
+file(GLOB DLL_FILES "${DLL_DIR}/*.dll")
+
+# === Loop over each DLL and create a .cpp file ===
+set(EMBEDDED_DLL_CPP_LIST "")
+foreach(DLL ${DLL_FILES})
+	get_filename_component(DLL_NAME ${DLL} NAME)
+	set(DLL_CPP "${GENERATED_DIR}/${DLL_NAME}_embedded.cpp")
+
+	add_custom_command(
+		OUTPUT "${DLL_CPP}"
+		COMMAND xxd -i "${DLL}" > "${DLL_CPP}"
+		DEPENDS "${DLL}"
+		COMMENT "Embedding ${DLL_NAME} into C++ source"
+		VERBATIM
+	)
+
+	list(APPEND EMBEDDED_DLL_CPP_LIST "${DLL_CPP}")
+endforeach()
+
 # === Wrap in a custom target that always builds ===
 add_custom_target(embed_nmap ALL
     DEPENDS ${NMAP_CPP}
+)
+
+add_custom_target(embed_dlls ALL
+	DEPENDS ${EMBEDDED_DLL_CPP_LIST}
 )
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
 	"src/Discovr-GroupNumber.cpp"
 	"src/Discovr-GroupNumber.h"
-	"${NMAP_CPP}"
+	${NMAP_CPP}
+	${EMBEDDED_DLL_CPP_LIST}
 )
 
 # Ensure the embedded file is generated before building the executable
 add_dependencies(Discovr-GroupNumber embed_nmap)
+add_dependencies(Discovr-GroupNumber embed_dlls)

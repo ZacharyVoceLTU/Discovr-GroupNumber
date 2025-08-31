@@ -25,6 +25,7 @@ extern unsigned int libssl_1_1_dll_len;
 extern unsigned char zlibwapi_dll[];
 extern unsigned int zlibwapi_dll_len;
 
+// TODO: Refactor into classes
 int main()
 {
 	std::filesystem::path tempNmapFolder{ "tempNmap" };
@@ -72,7 +73,7 @@ void extractNmapBinary(const std::filesystem::path& outputPath) {
 	outFile.write(reinterpret_cast<const char*>(nmap_exe), nmap_exe_len);
 }
 
-// TODO: Make not hardcoded -> generate list of embedded DLLs in CMake, throw in header to loop over
+// TODO: Make not hardcoded -> generate list of embedded DLLs in CMake, chuck in header to loop over
 void extractNmapDlls(const std::filesystem::path& outputPath, const std::string& fileName, unsigned char* data, unsigned int length) {
 	std::ofstream outFile(outputPath / fileName, std::ios::binary);
 

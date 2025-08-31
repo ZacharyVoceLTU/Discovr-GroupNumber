@@ -9,6 +9,8 @@ void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void extractNmapBinary(const std::filesystem::path& outputPath);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
 void extractNmapDlls(const std::filesystem::path& outputPath, const std::string& fileName, unsigned char* data, unsigned int length);
+void menu(const std::filesystem::path& tempNmapFolder);
+void displayVersion(std::filesystem::path& nmapPath);
 
 extern unsigned char nmap_exe[];
 extern unsigned int nmap_exe_len;
@@ -40,6 +42,8 @@ int main()
 	extractNmapDlls(tempNmapFolder.string(), "libssh2.dll", libssh2_dll, libssh2_dll_len);
 	extractNmapDlls(tempNmapFolder.string(), "libssl-1_1.dll", libssl_1_1_dll, libssl_1_1_dll_len);
 	extractNmapDlls(tempNmapFolder.string(), "zlibwapi.dll", zlibwapi_dll, zlibwapi_dll_len);
+
+	menu(tempNmapFolder);
 
 	deleteTempFolders(tempNmapFolder);
 
@@ -86,4 +90,32 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
 	} catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Error deleting folder: " << e.what() << '\n';
 	}
+}
+
+void menu(const std::filesystem::path& tempNmapFolder) {
+	std::filesystem::path nmapPath = tempNmapFolder / "nmap.exe";
+	
+	// TODO: Implement enum class
+	int choice{};
+	while (choice != 2) {
+		std::cout << "1. Print nmap version\n"
+					 "2. Quit\n";
+
+		std::cout << "What do you want to do: " << '\n';
+		std::cin >> choice;
+
+		switch (choice) {
+			case 1:
+				displayVersion(nmapPath);
+				break;
+			case 2:
+				continue;
+		}
+	}
+}
+
+// Currently just a test to see if nmap works
+void displayVersion(std::filesystem::path& nmapPath) {
+	std::string command{ "\"" + nmapPath.string() + "\" -version"};
+	std::system(command.c_str());
 }

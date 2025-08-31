@@ -7,6 +7,7 @@
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void extractNmapBinary(const std::filesystem::path& outputPath);
+void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
 
 extern unsigned char nmap_exe[];
 extern unsigned int nmap_exe_len;
@@ -22,6 +23,9 @@ int main()
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << '\n';
 	}
+
+	deleteTempFolders(tempNmapFolder);
+
 	return 0;
 }
 
@@ -45,4 +49,13 @@ void extractNmapBinary(const std::filesystem::path& outputPath) {
 	}
 
 	outFile.write(reinterpret_cast<const char*>(nmap_exe), nmap_exe_len);
+}
+
+void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
+	try {
+		std::uintmax_t removedCount = std::filesystem::remove_all(tempNmapFolder);
+		std::cout << "Deleted " << removedCount << " files/folders.\n";
+	} catch (const std::filesystem::filesystem_error& e) {
+		std::cerr << "Error deleting folder: " << e.what() << '\n';
+	}
 }

@@ -34,7 +34,7 @@ set(NMAP_CPP "${GENERATED_DIR}/nmap_embedded.cpp")
 # === Convert nmap.exe to cpp ===
 add_custom_command(
 	OUTPUT ${NMAP_CPP}
-	COMMAND xxd -i ${NMAP_EXE} > ${NMAP_CPP}
+	COMMAND xxd -i -n nmap_exe ${NMAP_EXE} > ${NMAP_CPP}
 	DEPENDS ${NMAP_EXE}
 	COMMENT "Embedding Nmap binary into C++ source"
 	VERBATIM
@@ -54,7 +54,7 @@ foreach(DLL ${DLL_FILES})
 
 	add_custom_command(
 		OUTPUT "${DLL_CPP}"
-		COMMAND xxd -i "${DLL}" > "${DLL_CPP}"
+		COMMAND xxd -i -n ${DLL_NAME} "${DLL}" > "${DLL_CPP}"
 		DEPENDS "${DLL}"
 		COMMENT "Embedding ${DLL_NAME} into C++ source"
 		VERBATIM
@@ -75,7 +75,6 @@ add_custom_target(embed_dlls ALL
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
 	"src/Discovr-GroupNumber.cpp"
-	"src/Discovr-GroupNumber.h"
 	${NMAP_CPP}
 	${EMBEDDED_DLL_CPP_LIST}
 )

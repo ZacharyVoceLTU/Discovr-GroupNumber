@@ -1,12 +1,48 @@
 ﻿// Discovr-GroupNumber.cpp : Defines the entry point for the application.
 //
 
-#include "Discovr-GroupNumber.h"
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 
-using namespace std;
+void createNmapFolder(const std::filesystem::path& tempNmapFolder);
+void extractNmapBinary(const std::filesystem::path& outputPath);
+
+extern unsigned char nmap_exe[];
+extern unsigned int nmap_exe_len;
 
 int main()
 {
-	cout << "Hello CMake. Test" << endl;
+	std::filesystem::path tempNmapFolder{ "tempNmap" };
+
+	createNmapFolder(tempNmapFolder);
+	
+	try {
+		extractNmapBinary(tempNmapFolder.string());
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+	}
 	return 0;
+}
+
+void createNmapFolder(const std::filesystem::path& tempNmapFolder) {
+	try {
+		if (std::filesystem::create_directory(tempNmapFolder)) {
+			std::cout << "Temp Nmap fodler created successfully: " << tempNmapFolder << '\n';
+		} else {
+			std::cout << "Temp Nmap folder already exists" << '\n';
+		}
+	} catch (const std::filesystem::filesystem_error& e) {
+		std::cerr << "Error creating folder: " << e.what() << '\n';
+	}
+}
+
+void extractNmapBinary(const std::filesystem::path& outputPath) {
+	std::ofstream outFile(outputPath / "nmap.exe", std::ios::binary);
+	
+	if (!outFile) {
+		throw std::runtime_error("Failed to open file for writing: " + outputPath.string());
+	}
+
+	outFile.write(reinterpret_cast<const char*>(nmap_exe), nmap_exe_len);
 }

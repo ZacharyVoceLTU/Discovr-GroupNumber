@@ -70,8 +70,9 @@ void menu(const std::filesystem::path& tempNmapFolder) {
 		std::cout << "1. Print nmap version\n"
 					 "2. Quit\n";
 
-		std::cout << "What do you want to do: " << '\n';
+		std::cout << "What do you want to do: ";
 		std::cin >> choice;
+		std::cout << '\n';
 
 		switch (choice) {
 			case 1:

@@ -21,13 +21,9 @@ int main()
 	createNmapFolder(tempNmapFolder);
 	
 	// Create extractors
-	std::vector <std::unique_ptr<Extractor>> extractors;
+	std::vector<std::unique_ptr<Extractor>> extractors{ };
 	extractors.push_back(std::make_unique<NmapExtractor>());
-	// TODO: Make not hardcoded -> generate list of embedded DLLs in CMake, chuck in header to loop over
-	extractors.push_back(std::make_unique <DllExtractor>("libcrypto-1_1.dll", libcrypto_1_1_dll, libcrypto_1_1_dll_len));
-	extractors.push_back(std::make_unique <DllExtractor>("libssh2.dll", libssh2_dll, libssh2_dll_len));
-	extractors.push_back(std::make_unique <DllExtractor>("libssl-1_1.dll", libssl_1_1_dll, libssl_1_1_dll_len));
-	extractors.push_back(std::make_unique <DllExtractor>("zlibwapi.dll", zlibwapi_dll, zlibwapi_dll_len));
+	extractors.push_back(std::make_unique<DllExtractor>());
 
 	for (auto& e : extractors) {
 		try {

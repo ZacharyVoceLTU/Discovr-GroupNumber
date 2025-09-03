@@ -87,4 +87,5 @@ void menu(const std::filesystem::path& tempNmapFolder) {
 void displayVersion(std::filesystem::path& nmapPath) {
 	std::string command{ "\"" + nmapPath.string() + "\" -version"};
 	std::system(command.c_str());
+	std::cout << '\n';
 }

@@ -4,16 +4,15 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <vector>
+#include <memory>
+#include "extractors/NmapExtractor.h"
+#include "extractors/DllExtractor.h"
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
-void extractNmapBinary(const std::filesystem::path& outputPath);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
-void extractNmapDlls(const std::filesystem::path& outputPath, const std::string& fileName, unsigned char* data, unsigned int length);
 void menu(const std::filesystem::path& tempNmapFolder);
 void displayVersion(std::filesystem::path& nmapPath);
-
-extern unsigned char nmap_exe[];
-extern unsigned int nmap_exe_len;
 
 // Remove when dynamic reimplementation of extractNmapDlls
 extern unsigned char libcrypto_1_1_dll[];
@@ -25,24 +24,28 @@ extern unsigned int libssl_1_1_dll_len;
 extern unsigned char zlibwapi_dll[];
 extern unsigned int zlibwapi_dll_len;
 
-// TODO: Refactor into classes
 int main()
 {
 	std::filesystem::path tempNmapFolder{ "tempNmap" };
 
 	createNmapFolder(tempNmapFolder);
 	
-	try {
-		extractNmapBinary(tempNmapFolder.string());
+	// Create extractors
+	std::vector <std::unique_ptr<Extractor>> extractors;
+	extractors.push_back(std::make_unique<NmapExtractor>());
+	// TODO: Make not hardcoded -> generate list of embedded DLLs in CMake, chuck in header to loop over
+	extractors.push_back(std::make_unique <DllExtractor>("libcrypto-1_1.dll", libcrypto_1_1_dll, libcrypto_1_1_dll_len));
+	extractors.push_back(std::make_unique <DllExtractor>("libssh2.dll", libssh2_dll, libssh2_dll_len));
+	extractors.push_back(std::make_unique <DllExtractor>("libssl-1_1.dll", libssl_1_1_dll, libssl_1_1_dll_len));
+	extractors.push_back(std::make_unique <DllExtractor>("zlibwapi.dll", zlibwapi_dll, zlibwapi_dll_len));
 
-	} catch (const std::exception& e) {
-		std::cerr << e.what() << '\n';
+	for (auto& e : extractors) {
+		try {
+			e->extract(tempNmapFolder);
+		} catch (const std::exception& e) {
+			std::cerr << e.what() << '\n';
+		}
 	}
-
-	extractNmapDlls(tempNmapFolder.string(), "libcrypto-1_1.dll", libcrypto_1_1_dll, libcrypto_1_1_dll_len);
-	extractNmapDlls(tempNmapFolder.string(), "libssh2.dll", libssh2_dll, libssh2_dll_len);
-	extractNmapDlls(tempNmapFolder.string(), "libssl-1_1.dll", libssl_1_1_dll, libssl_1_1_dll_len);
-	extractNmapDlls(tempNmapFolder.string(), "zlibwapi.dll", zlibwapi_dll, zlibwapi_dll_len);
 
 	menu(tempNmapFolder);
 
@@ -61,27 +64,6 @@ void createNmapFolder(const std::filesystem::path& tempNmapFolder) {
 	} catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Error creating folder: " << e.what() << '\n';
 	}
-}
-
-void extractNmapBinary(const std::filesystem::path& outputPath) {
-	std::ofstream outFile(outputPath / "nmap.exe", std::ios::binary);
-	
-	if (!outFile) {
-		throw std::runtime_error("Failed to open file for writing: " + outputPath.string());
-	}
-
-	outFile.write(reinterpret_cast<const char*>(nmap_exe), nmap_exe_len);
-}
-
-// TODO: Make not hardcoded -> generate list of embedded DLLs in CMake, chuck in header to loop over
-void extractNmapDlls(const std::filesystem::path& outputPath, const std::string& fileName, unsigned char* data, unsigned int length) {
-	std::ofstream outFile(outputPath / fileName, std::ios::binary);
-
-	if (!outFile) {
-		throw std::runtime_error("Failed to open file " + fileName + " for writing: " + outputPath.string());
-	}
-
-	outFile.write(reinterpret_cast<const char*>(data), length);
 }
 
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {

@@ -107,6 +107,10 @@ add_executable (Discovr-GroupNumber
 	"src/extractors/DllExtractor.h"
 	"src/extractors/DllExtractor.cpp")
 
+if(MSVC)
+	target_compile_options(Discovr-GroupNumber PRIVATE /W4 /WX)
+endif()
+
 # Ensure the embedded file is generated before building the executable
 add_dependencies(Discovr-GroupNumber embed_nmap)
 add_dependencies(Discovr-GroupNumber embed_dlls)

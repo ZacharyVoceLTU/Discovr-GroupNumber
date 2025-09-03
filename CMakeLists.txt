@@ -34,9 +34,8 @@ set(NMAP_STAMP "${CMAKE_BINARY_DIR}/nmap_embedded.stamp")
 
 # === Convert nmap.exe to cpp ===
 add_custom_command(
-	OUTPUT ${NMAP_CPP} ${NMAP_STAMP}
+	OUTPUT ${NMAP_CPP}
 	COMMAND xxd -i -n nmap_exe ${NMAP_EXE} > ${NMAP_CPP}
-	COMMAND ${CMAKE_COMMAND} -E touch "${NMAP_STAMP}"
 	DEPENDS ${NMAP_EXE}
 	COMMENT "Embedding Nmap binary into C++ source"
 	VERBATIM

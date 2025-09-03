@@ -63,6 +63,34 @@ foreach(DLL ${DLL_FILES})
 	list(APPEND EMBEDDED_DLL_CPP_LIST "${DLL_CPP}")
 endforeach()
 
+# === Writing dll info to header ===
+
+set(EMBEDDED_DIR ${CMAKE_SOURCE_DIR}/src/embedded)
+file(GLOB DLL_FILES "${nmap_binary_SOURCE_DIR}/*.dll")
+
+# Generate a header with all the DLL info
+set(DLL_HEADER "${EMBEDDED_DIR}/dll_list.h")
+file(WRITE ${DLL_HEADER} "// Auto generated list of dlls\n")
+file(APPEND ${DLL_HEADER} "#pragma once\n\n")
+file(APPEND ${DLL_HEADER} "#include <string>\n")
+file(APPEND ${DLL_HEADER} "#include <vector>\n")
+file(APPEND ${DLL_HEADER} "struct DllInfo {\n")
+file(APPEND ${DLL_HEADER} "	   const char* name;\n")
+file(APPEND ${DLL_HEADER} "	   unsigned char* data;\n")
+file(APPEND ${DLL_HEADER} "	   unsigned int length;\n")
+file(APPEND ${DLL_HEADER} "}\n\n")
+file(APPEND ${DLL_HEADER} "inline const std::vector<DllInfo> dlls = {\n")
+
+foreach(DLL ${DLL_FILES})
+    get_filename_component(DLL_NAME ${DLL} NAME)
+    # Convert to corresponding embedded symbol name, e.g., libssl_1_1_dll
+    string(REPLACE "." "_" DLL_SYMBOL ${DLL_NAME})
+    string(REPLACE "-" "_" DLL_SYMBOL ${DLL_SYMBOL})
+    file(APPEND ${DLL_HEADER} "    {\"${DLL_NAME}\", ${DLL_SYMBOL}, ${DLL_SYMBOL}_len},\n")
+endforeach()
+
+file(APPEND ${DLL_HEADER} "};\n")
+
 # === Wrap in a custom target that always builds ===
 add_custom_target(embed_nmap ALL
     DEPENDS ${NMAP_CPP}

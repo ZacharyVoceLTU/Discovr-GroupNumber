@@ -77,7 +77,11 @@ add_executable (Discovr-GroupNumber
 	"src/Discovr-GroupNumber.cpp"
 	${NMAP_CPP}
 	${EMBEDDED_DLL_CPP_LIST}
-)
+	"src/extractors/Extractor.h"
+	"src/extractors/NmapExtractor.cpp"
+	"src/extractors/NmapExtractor.h"
+	"src/extractors/DllExtractor.h"
+	"src/extractors/DllExtractor.cpp")
 
 # Ensure the embedded file is generated before building the executable
 add_dependencies(Discovr-GroupNumber embed_nmap)

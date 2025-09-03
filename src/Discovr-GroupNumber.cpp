@@ -14,16 +14,6 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
 void menu(const std::filesystem::path& tempNmapFolder);
 void displayVersion(std::filesystem::path& nmapPath);
 
-// Remove when dynamic reimplementation of extractNmapDlls
-extern unsigned char libcrypto_1_1_dll[];
-extern unsigned int libcrypto_1_1_dll_len; 
-extern unsigned char libssh2_dll[];
-extern unsigned int libssh2_dll_len;
-extern unsigned char libssl_1_1_dll[];
-extern unsigned int libssl_1_1_dll_len;
-extern unsigned char zlibwapi_dll[];
-extern unsigned int zlibwapi_dll_len;
-
 int main()
 {
 	std::filesystem::path tempNmapFolder{ "tempNmap" };

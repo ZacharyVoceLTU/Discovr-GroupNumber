@@ -14,6 +14,11 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
 void menu(const std::filesystem::path& tempNmapFolder);
 void displayVersion(std::filesystem::path& nmapPath);
 
+enum class Choice {
+	Version = 1,
+	Quit
+};
+
 int main()
 {
 	std::filesystem::path tempNmapFolder{ "tempNmap" };
@@ -64,22 +69,32 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
 void menu(const std::filesystem::path& tempNmapFolder) {
 	std::filesystem::path nmapPath = tempNmapFolder / "nmap.exe";
 	
-	// TODO: Implement enum class
-	int choice{};
-	while (choice != 2) {
+	int input{ };
+	Choice userChoice{ };
+	while (userChoice != Choice::Quit) {
 		std::cout << "1. Print nmap version\n"
-					 "2. Quit\n";
+					 "2. Quit\n"
+					 "What do you want to do: ";
 
-		std::cout << "What do you want to do: ";
-		std::cin >> choice;
+		if (!(std::cin >> input)) {
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cout << "\nOnly enter a valid int!!\n\n";
+			continue;
+		}
+
 		std::cout << '\n';
 
-		switch (choice) {
-			case 1:
+		userChoice = static_cast<Choice>(input);
+
+		switch (userChoice) {
+			case Choice::Version:
 				displayVersion(nmapPath);
 				break;
-			case 2:
-				continue;
+			case Choice::Quit:
+				break;
+			default:
+				std::cout << "Unknown option!\n\n";
 		}
 	}
 }

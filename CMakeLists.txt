@@ -3,12 +3,6 @@
 #
 cmake_minimum_required (VERSION 3.15)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
-
 project ("Discovr-GroupNumber")
 
 set(CMAKE_CXX_STANDARD 20)
@@ -81,8 +75,6 @@ add_custom_command(
 	VERBATIM
 )
 
-
-
 # === Wrap in a custom target that always builds ===
 add_custom_target(embed_nmap ALL
     DEPENDS ${NMAP_CPP}
@@ -106,10 +98,6 @@ add_executable (Discovr-GroupNumber
 	"src/extractors/NmapExtractor.h"
 	"src/extractors/DllExtractor.h"
 	"src/extractors/DllExtractor.cpp")
-
-if(MSVC)
-	target_compile_options(Discovr-GroupNumber PRIVATE /W4 /WX)
-endif()
 
 # Ensure the embedded file is generated before building the executable
 add_dependencies(Discovr-GroupNumber embed_nmap)

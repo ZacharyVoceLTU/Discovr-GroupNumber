@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # generated automatically
 src/embedded
+
+# not needed will generate when building
+build/

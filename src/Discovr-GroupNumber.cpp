@@ -38,6 +38,16 @@ int main()
 		}
 	}
 
+	#if defined(_DEBUG)
+		#if defined(__clang__)
+			std::cout << "Compiled with Clang!\n";
+		#elif defined(_MSC_VER)
+			std::cout << "Compiled with MSVC!\n";
+		#else
+			std::cout << "Other compiler\n";
+		#endif
+	#endif
+
 	menu(tempNmapFolder);
 
 	deleteTempFolders(tempNmapFolder);

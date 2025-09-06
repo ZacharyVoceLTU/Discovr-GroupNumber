@@ -1,5 +1,5 @@
 #include "DllExtractor.h"
-#include "../embedded/dll_list.h"
+#include "../NmapEmbedded/dll_list.h"
 #include <fstream>
 #include <stdexcept>
 

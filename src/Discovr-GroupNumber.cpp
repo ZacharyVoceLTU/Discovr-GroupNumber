@@ -13,9 +13,11 @@ void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
 void menu(const std::filesystem::path& tempNmapFolder);
 void displayVersion(std::filesystem::path& nmapPath);
+void testScan(std::filesystem::path& nmapPath);
 
 enum class Choice {
 	Version = 1,
+	TestScan,
 	Quit
 };
 
@@ -83,7 +85,8 @@ void menu(const std::filesystem::path& tempNmapFolder) {
 	Choice userChoice{ };
 	while (userChoice != Choice::Quit) {
 		std::cout << "1. Print nmap version\n"
-					 "2. Quit\n"
+					 "2. Test Scan\n"
+					 "3. Quit\n"
 					 "What do you want to do: ";
 
 		if (!(std::cin >> input)) {
@@ -103,6 +106,9 @@ void menu(const std::filesystem::path& tempNmapFolder) {
 				break;
 			case Choice::Quit:
 				break;
+			case Choice::TestScan:
+				testScan(nmapPath);
+				break;
 			default:
 				std::cout << "Unknown option!\n\n";
 		}
@@ -112,6 +118,12 @@ void menu(const std::filesystem::path& tempNmapFolder) {
 // Currently just a test to see if nmap works
 void displayVersion(std::filesystem::path& nmapPath) {
 	std::string command{ "\"" + nmapPath.string() + "\" -version"};
+	std::system(command.c_str());
+	std::cout << '\n';
+}
+
+void testScan(std::filesystem::path& nmapPath) {
+	std::string command{ "\"" + nmapPath.string() + "\" -sV 127.0.0.1 -p 80"};
 	std::system(command.c_str());
 	std::cout << '\n';
 }

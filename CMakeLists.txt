@@ -17,89 +17,136 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nmap_binary)
 
-# === Create output folder for embedded nmap binary and dlls ===
-set(EMBEDDED_DIR ${CMAKE_SOURCE_DIR}/src/embedded)
-file(MAKE_DIRECTORY ${EMBEDDED_DIR})
+# === Master list of all files to embed ===
+set(EMBEDDED_DIR ${CMAKE_SOURCE_DIR}/src/NmapEmbedded)
+file(MAKE_DIRECTORY "${EMBEDDED_DIR}")
 
-# === Convert Nmap binary into C array ===
-set(NMAP_EXE "${nmap_binary_SOURCE_DIR}/nmap.exe")
-set(NMAP_CPP "${EMBEDDED_DIR}/nmap_embedded.cpp")
-set(NMAP_STAMP "${CMAKE_BINARY_DIR}/nmap_embedded.stamp")
+# Get a list of all files to embed. Be specific to avoid directories and unwanted files.
+file(GLOB NMAP_EXE "${nmap_binary_SOURCE_DIR}/nmap.exe")
+file(GLOB DLL_FILES "${nmap_binary_SOURCE_DIR}/*.dll")
+file(GLOB_RECURSE NMAP_SCRIPTS_FILES "${nmap_binary_SOURCE_DIR}/scripts/*.nse")
+file(GLOB_RECURSE NMAP_NSELIB_FILES "${nmap_binary_SOURCE_DIR}/nselib/*")
 
-# === Convert nmap.exe to cpp ===
-add_custom_command(
-	OUTPUT ${NMAP_CPP}
-	COMMAND xxd -i -n nmap_exe ${NMAP_EXE} > ${NMAP_CPP}
-	DEPENDS ${NMAP_EXE}
-	COMMENT "Embedding Nmap binary into C++ source"
-	VERBATIM
-)
+# Combine all lists into a single master list
+set(MASTER_EMBED_FILES ${NMAP_EXE} ${DLL_FILES} ${NMAP_SCRIPTS_FILES} ${NMAP_NSELIB_FILES} ${NMAP_NSELIB_DATA_FILES})
 
-# === nmap DLL folder ===
-set(DLL_DIR "${nmap_binary_SOURCE_DIR}")
+set(EMBEDDED_CPP_LIST "")
 
-# === Collect nmap DLLs ===
-file(GLOB DLL_FILES "${DLL_DIR}/*.dll")
+# === Single loop to process all files ===
+foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
+    file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
+    string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
+    string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
+    string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
+    set(FULL_OUTPUT_PATH "${EMBEDDED_DIR}/${REL_PATH}_embedded.cpp")
+    get_filename_component(OUTPUT_DIR "${FULL_OUTPUT_PATH}" DIRECTORY)
+    file(MAKE_DIRECTORY "${OUTPUT_DIR}")
 
-# === Loop over each DLL and create a .cpp file ===
-set(EMBEDDED_DLL_CPP_LIST "")
-foreach(DLL ${DLL_FILES})
-	get_filename_component(DLL_NAME ${DLL} NAME)
-	set(DLL_CPP "${EMBEDDED_DIR}/${DLL_NAME}_embedded.cpp")
+    add_custom_command(
+        OUTPUT "${FULL_OUTPUT_PATH}"
+        COMMAND xxd -i -n ${VAR_NAME} "${FILE_TO_EMBED}" > "${FULL_OUTPUT_PATH}"
+        DEPENDS "${FILE_TO_EMBED}"
+        COMMENT "Embedding: ${REL_PATH}"
+        VERBATIM
+    )
 
-	add_custom_command(
-		OUTPUT "${DLL_CPP}"
-		COMMAND xxd -i -n ${DLL_NAME} "${DLL}" > "${DLL_CPP}"
-		DEPENDS "${DLL}"
-		COMMENT "Embedding ${DLL_NAME} into C++ source"
-		VERBATIM
-	)
-
-	list(APPEND EMBEDDED_DLL_CPP_LIST "${DLL_CPP}")
+    list(APPEND EMBEDDED_CPP_LIST "${FULL_OUTPUT_PATH}")
 endforeach()
 
-# === Writing dll info to header ===
+
+# === Master list of all files to embed ===
+
+# Get a list of all files to embed.
+file(GLOB NMAP_EXE "${nmap_binary_SOURCE_DIR}/nmap.exe")
 file(GLOB DLL_FILES "${nmap_binary_SOURCE_DIR}/*.dll")
+file(GLOB_RECURSE NMAP_SCRIPTS_FILES "${nmap_binary_SOURCE_DIR}/scripts/*.nse")
+file(GLOB_RECURSE NMAP_NSELIB_FILES "${nmap_binary_SOURCE_DIR}/nselib/*.lua")
 
-# Generate a header with all the DLL info
-set(OUTPUT_HEADER "${EMBEDDED_DIR}/dll_list.h")
+# Use a non-recursive glob to get files in nselib/data/ but avoid subdirectories
+file(GLOB_RECURSE NMAP_NSELIB_DATA_FILES
+    "${nmap_binary_SOURCE_DIR}/nselib/data/*"
+    "${nmap_binary_SOURCE_DIR}/nselib/data/*/*"
+    "${nmap_binary_SOURCE_DIR}/nselib/data/*/*/*"
+)
 
+# The single output header file
+set(OUTPUT_HEADER "${EMBEDDED_DIR}/embedded_manifest.h")
+
+# Generating header content 
+# The command that will generate the header file
 add_custom_command(
-	OUTPUT ${OUTPUT_HEADER}
-	COMMAND ${CMAKE_COMMAND} 
-		-DOUTPUT_HEADER=${OUTPUT_HEADER}
-		-DDLL_DIR=${nmap_binary_SOURCE_DIR}
-		-P "${CMAKE_SOURCE_DIR}/generate_dll_list.cmake"
-	DEPENDS ${DLL_FILES}
-	COMMENT "Generating DLL header for embedded Nmap DLLs"
-	VERBATIM
+    OUTPUT "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "// Auto generated master manifest" > "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "#pragma once" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "#include <string>" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "#include <vector>" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "struct DllInfo {" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "  const char* name;" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "  unsigned char* data;" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "  unsigned int length;" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "};" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "" >> "${OUTPUT_HEADER}"
+    # Generate extern declarations
+    COMMAND ${CMAKE_COMMAND} -E echo "// Generate extern declarations" >> "${OUTPUT_HEADER}"
+    VERBATIM
 )
 
-# === Wrap in a custom target that always builds ===
-add_custom_target(embed_nmap ALL
-    DEPENDS ${NMAP_CPP}
-)
+# Generate extern declarations
+foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
+    file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
+    string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
+    string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
+    string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
+    add_custom_command(
+        OUTPUT "${OUTPUT_HEADER}"
+        APPEND # Use APPEND to add to the existing command
+        COMMAND ${CMAKE_COMMAND} -E echo "extern unsigned char ${VAR_NAME}[];" >> "${OUTPUT_HEADER}"
+        COMMAND ${CMAKE_COMMAND} -E echo "extern unsigned int ${VAR_NAME}_len;" >> "${OUTPUT_HEADER}"
+        #VERBATIM
+    )
+endforeach()
 
-add_custom_target(embed_dlls ALL
-	DEPENDS ${EMBEDDED_DLL_CPP_LIST}
-)
+file(APPEND "${OUTPUT_HEADER}" "\n")
 
-add_custom_target(embed_dlls_header ALL
-	DEPENDS ${OUTPUT_HEADER}
+# Generate the inline vector
+# Generate the inline vector inside the loop
+add_custom_command(
+    OUTPUT "${OUTPUT_HEADER}"
+    APPEND
+    COMMAND ${CMAKE_COMMAND} -E echo "" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "// Generate the inline vector" >> "${OUTPUT_HEADER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "inline const std::vector<DllInfo> embedded_assets = {" >> "${OUTPUT_HEADER}"
+   # VERBATIM
+)
+foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
+    file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
+    string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
+    string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
+    string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
+    add_custom_command(
+        OUTPUT "${OUTPUT_HEADER}"
+        APPEND
+        COMMAND ${CMAKE_COMMAND} -E echo "   {\"${REL_PATH}\", ${VAR_NAME}, ${VAR_NAME}_len}," >> "${OUTPUT_HEADER}"
+        #VERBATIM
+    )
+endforeach()
+add_custom_command(
+    OUTPUT "${OUTPUT_HEADER}"
+    APPEND
+    COMMAND ${CMAKE_COMMAND} -E echo "};" >> "${OUTPUT_HEADER}"
+    #VERBATIM
 )
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
 	"src/Discovr-GroupNumber.cpp"
-	${NMAP_CPP}
-	${EMBEDDED_DLL_CPP_LIST}
+    ${EMBEDDED_CPP_LIST} # A single list for ALL embedded C++ files
+	"${OUTPUT_HEADER}"
 	"src/extractors/Extractor.h"
 	"src/extractors/NmapExtractor.cpp"
 	"src/extractors/NmapExtractor.h"
 	"src/extractors/DllExtractor.h"
-	"src/extractors/DllExtractor.cpp")
+	"src/extractors/DllExtractor.cpp"
+)
 
-# Ensure the embedded file is generated before building the executable
-add_dependencies(Discovr-GroupNumber embed_nmap)
-add_dependencies(Discovr-GroupNumber embed_dlls)
-add_dependencies(Discovr-GroupNumber embed_dlls_header)

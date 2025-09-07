@@ -20,8 +20,7 @@ enum class Choice {
 	Quit
 }; 
 
-int main()
-{
+int main() {
 	std::filesystem::path tempNmapFolder{ "tempNmap" };
 
 	createNmapFolder(tempNmapFolder);

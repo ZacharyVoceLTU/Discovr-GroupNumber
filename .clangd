@@ -1,0 +1,9 @@
+CompileFlags:
+  # This tells clangd to look for the compilation database relative to this file.
+  # The path should be the same on both Linux and Windows relative to the project root.
+  # In this case, your build directory is `out/build/developer-tools`.
+  #
+  # The `!compile_commands` flag tells clangd to find the file itself.
+  # The `CompilationDatabaseDir` specifies the path to that directory.
+  # It works on both platforms without modification.
+  CompilationDatabase: "out/build/developer-tools"

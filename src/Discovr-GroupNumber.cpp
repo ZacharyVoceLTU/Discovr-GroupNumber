@@ -2,7 +2,6 @@
 //
 
 #include <iostream>
-#include <fstream>
 #include <filesystem>
 #include <vector>
 #include <memory>
@@ -19,7 +18,7 @@ enum class Choice {
 	Version = 1,
 	TestScan,
 	Quit
-};
+}; 
 
 int main()
 {

@@ -7,6 +7,7 @@ project ("Discovr-GroupNumber" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #  === Download Nmap ===
 include(FetchContent)
@@ -53,100 +54,80 @@ foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
     list(APPEND EMBEDDED_CPP_LIST "${FULL_OUTPUT_PATH}")
 endforeach()
 
-
-# === Master list of all files to embed ===
-
-# Get a list of all files to embed.
-file(GLOB NMAP_EXE "${nmap_binary_SOURCE_DIR}/nmap.exe")
-file(GLOB DLL_FILES "${nmap_binary_SOURCE_DIR}/*.dll")
-file(GLOB_RECURSE NMAP_SCRIPTS_FILES "${nmap_binary_SOURCE_DIR}/scripts/*.nse")
-file(GLOB_RECURSE NMAP_NSELIB_FILES "${nmap_binary_SOURCE_DIR}/nselib/*.lua")
-
-# Use a non-recursive glob to get files in nselib/data/ but avoid subdirectories
-file(GLOB_RECURSE NMAP_NSELIB_DATA_FILES
-    "${nmap_binary_SOURCE_DIR}/nselib/data/*"
-    "${nmap_binary_SOURCE_DIR}/nselib/data/*/*"
-    "${nmap_binary_SOURCE_DIR}/nselib/data/*/*/*"
-)
-
 # The single output header file
 set(OUTPUT_HEADER "${EMBEDDED_DIR}/embedded_manifest.h")
 
-# Generating header content 
-# The command that will generate the header file
-add_custom_command(
-    OUTPUT "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "// Auto generated master manifest" > "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "#pragma once" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "#include <string>" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "#include <vector>" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "struct DllInfo {" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "  const char* name;" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "  unsigned char* data;" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "  unsigned int length;" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "};" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "" >> "${OUTPUT_HEADER}"
-    # Generate extern declarations
-    COMMAND ${CMAKE_COMMAND} -E echo "// Generate extern declarations" >> "${OUTPUT_HEADER}"
-    VERBATIM
-)
+# The single output header file
+set(OUTPUT_HEADER "${EMBEDDED_DIR}/embedded_manifest.h")
+set(DEPENDS_ON_FILES "") # We'll populate this later
 
-# Generate extern declarations
+# WHY DOES THIS KEEP BREAKING EVEN THOUGH I DONT TOUCH IT!!!
+
+# Build the content of the header file as a single string
+set(HEADER_CONTENT_STRING "// Auto generated master manifest
+#pragma once
+
+#include <string>
+#include <vector>
+struct DllInfo {
+  const char* name;
+  unsigned char* data;
+  unsigned int length;
+};
+
+// Generate extern declarations
+")
+
+# Add extern declarations
 foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
     file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
     string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
     string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
     string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
-    add_custom_command(
-        OUTPUT "${OUTPUT_HEADER}"
-        APPEND # Use APPEND to add to the existing command
-        COMMAND ${CMAKE_COMMAND} -E echo "extern unsigned char ${VAR_NAME}[];" >> "${OUTPUT_HEADER}"
-        COMMAND ${CMAKE_COMMAND} -E echo "extern unsigned int ${VAR_NAME}_len;" >> "${OUTPUT_HEADER}"
-        #VERBATIM
-    )
+    string(APPEND HEADER_CONTENT_STRING "extern unsigned char ${VAR_NAME}[];\n")
+    string(APPEND HEADER_CONTENT_STRING "extern unsigned int ${VAR_NAME}_len;\n")
 endforeach()
 
-file(APPEND "${OUTPUT_HEADER}" "\n")
+string(APPEND HEADER_CONTENT_STRING "
+// Generate the inline vector
+inline const std::vector<DllInfo> embedded_assets = {
+")
 
-# Generate the inline vector
-# Generate the inline vector inside the loop
-add_custom_command(
-    OUTPUT "${OUTPUT_HEADER}"
-    APPEND
-    COMMAND ${CMAKE_COMMAND} -E echo "" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "// Generate the inline vector" >> "${OUTPUT_HEADER}"
-    COMMAND ${CMAKE_COMMAND} -E echo "inline const std::vector<DllInfo> embedded_assets = {" >> "${OUTPUT_HEADER}"
-   # VERBATIM
-)
+# Add the inline vector content
 foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
     file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
     string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
     string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
     string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
-    add_custom_command(
-        OUTPUT "${OUTPUT_HEADER}"
-        APPEND
-        COMMAND ${CMAKE_COMMAND} -E echo "   {\"${REL_PATH}\", ${VAR_NAME}, ${VAR_NAME}_len}," >> "${OUTPUT_HEADER}"
-        #VERBATIM
-    )
+    string(APPEND HEADER_CONTENT_STRING "   {\"${REL_PATH}\", ${VAR_NAME}, ${VAR_NAME}_len},\n")
 endforeach()
+
+string(APPEND HEADER_CONTENT_STRING "};")
+
+# Create a temporary file to hold the generated content
+set(TEMP_HEADER_PATH "${CMAKE_BINARY_DIR}/embedded_manifest.h.tmp")
+file(WRITE "${TEMP_HEADER_PATH}" "${HEADER_CONTENT_STRING}")
+
+# Add a custom command to copy the temporary file to the final destination
+# The DEPENDS here ensures the command is triggered whenever the input files change.
 add_custom_command(
     OUTPUT "${OUTPUT_HEADER}"
-    APPEND
-    COMMAND ${CMAKE_COMMAND} -E echo "};" >> "${OUTPUT_HEADER}"
-    #VERBATIM
+    COMMAND ${CMAKE_COMMAND} -E copy "${TEMP_HEADER_PATH}" "${OUTPUT_HEADER}"
+    DEPENDS ${MASTER_EMBED_FILES}
+    COMMENT "Generating embedded_manifest.h"
 )
+
+# --- END: The single, correct block to generate the header ---
+
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
-	"src/Discovr-GroupNumber.cpp"
+    "src/Discovr-GroupNumber.cpp"
     ${EMBEDDED_CPP_LIST} # A single list for ALL embedded C++ files
-	"${OUTPUT_HEADER}"
-	"src/extractors/Extractor.h"
-	"src/extractors/NmapExtractor.cpp"
-	"src/extractors/NmapExtractor.h"
-	"src/extractors/DllExtractor.h"
-	"src/extractors/DllExtractor.cpp"
+    "${OUTPUT_HEADER}"
+    "src/extractors/Extractor.h"
+    "src/extractors/NmapExtractor.cpp"
+    "src/extractors/NmapExtractor.h"
+    "src/extractors/DllExtractor.h"
+    "src/extractors/DllExtractor.cpp"
 )
-

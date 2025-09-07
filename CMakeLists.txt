@@ -7,7 +7,7 @@ project ("Discovr-GroupNumber" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #  === Download Nmap ===
 include(FetchContent)
@@ -126,6 +126,7 @@ add_executable (Discovr-GroupNumber
     ${EMBEDDED_CPP_LIST} # A single list for ALL embedded C++ files
     "${OUTPUT_HEADER}"
     "src/extractors/Extractor.h"
+    "src/extractors/Extractor.cpp"
     "src/extractors/NmapExtractor.cpp"
     "src/extractors/NmapExtractor.h"
     "src/extractors/DllExtractor.h"

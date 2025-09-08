@@ -5,6 +5,6 @@
 
 class Extractor {
 public:
-	virtual ~Extractor() = default;
-	virtual void extract(const std::filesystem::path& outputFolder) = 0;
+	~Extractor() = default;
+	void extract(const std::filesystem::path& outputFolder);
 };

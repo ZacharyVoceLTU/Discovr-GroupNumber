@@ -23,18 +23,22 @@ set(EMBEDDED_DIR ${CMAKE_SOURCE_DIR}/src/NmapEmbedded)
 file(MAKE_DIRECTORY "${EMBEDDED_DIR}")
 
 # Get a list of all files to embed. Be specific to avoid directories and unwanted files.
-file(GLOB NMAP_EXE "${nmap_binary_SOURCE_DIR}/nmap.exe")
-file(GLOB DLL_FILES "${nmap_binary_SOURCE_DIR}/*.dll")
-file(GLOB_RECURSE NMAP_SCRIPTS_FILES "${nmap_binary_SOURCE_DIR}/scripts/*.nse")
-file(GLOB_RECURSE NMAP_NSELIB_FILES "${nmap_binary_SOURCE_DIR}/nselib/*")
+file(GLOB_RECURSE NMAP_BINARY "${nmap_binary_SOURCE_DIR}/*")
 
 # Combine all lists into a single master list
-set(MASTER_EMBED_FILES ${NMAP_EXE} ${DLL_FILES} ${NMAP_SCRIPTS_FILES} ${NMAP_NSELIB_FILES} ${NMAP_NSELIB_DATA_FILES})
+set(MASTER_EMBED_FILES ${NMAP_BINARY})
 
 set(EMBEDDED_CPP_LIST "")
 
 # === Single loop to process all files ===
 foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
+    get_filename_component(FILENAME ${FILE_TO_EMBED} NAME)
+
+    if (FILENAME MATCHES "^[0-9]")
+        MESSAGE(STATUS "Skipping file starting with a digit: ${FILENAME}")
+        continue()
+    endif()
+
     file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
     string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
     string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
@@ -67,7 +71,6 @@ set(DEPENDS_ON_FILES "") # We'll populate this later
 set(HEADER_CONTENT_STRING "// Auto generated master manifest
 #pragma once
 
-#include <string>
 #include <vector>
 struct DllInfo {
   const char* name;
@@ -80,6 +83,13 @@ struct DllInfo {
 
 # Add extern declarations
 foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
+    get_filename_component(FILENAME ${FILE_TO_EMBED} NAME)
+
+    if (FILENAME MATCHES "^[0-9]")
+        MESSAGE(STATUS "Skipping file starting with a digit: ${FILENAME}")
+        continue()
+    endif()
+
     file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
     string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
     string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
@@ -95,6 +105,13 @@ inline const std::vector<DllInfo> embedded_assets = {
 
 # Add the inline vector content
 foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})
+    get_filename_component(FILENAME ${FILE_TO_EMBED} NAME)
+
+    if (FILENAME MATCHES "^[0-9]")
+        MESSAGE(STATUS "Skipping file starting with a digit: ${FILENAME}")
+        continue()
+    endif()
+
     file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
     string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
     string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
@@ -124,11 +141,6 @@ add_custom_command(
 add_executable (Discovr-GroupNumber
     "src/Discovr-GroupNumber.cpp"
     ${EMBEDDED_CPP_LIST} # A single list for ALL embedded C++ files
-    "${OUTPUT_HEADER}"
-    "src/extractors/Extractor.h"
+    "${OUTPUT_HEADER}" # I know bad practice but it works for now
     "src/extractors/Extractor.cpp"
-    "src/extractors/NmapExtractor.cpp"
-    "src/extractors/NmapExtractor.h"
-    "src/extractors/DllExtractor.h"
-    "src/extractors/DllExtractor.cpp"
 )

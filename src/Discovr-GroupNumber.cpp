@@ -3,10 +3,8 @@
 
 #include <iostream>
 #include <filesystem>
-#include <vector>
 #include <memory>
-#include "extractors/NmapExtractor.h"
-#include "extractors/DllExtractor.h"
+#include "extractors/Extractor.h"
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
@@ -25,18 +23,9 @@ int main() {
 
 	createNmapFolder(tempNmapFolder);
 	
-	// Create extractors
-	std::vector<std::unique_ptr<Extractor>> extractors{ };
-	extractors.push_back(std::make_unique<NmapExtractor>());
-	extractors.push_back(std::make_unique<DllExtractor>());
+	std::unique_ptr<Extractor> extractor = std::make_unique<Extractor>();
 
-	for (auto& e : extractors) {
-		try {
-			e->extract(tempNmapFolder);
-		} catch (const std::exception& e) {
-			std::cerr << e.what() << '\n';
-		}
-	}
+	extractor->extract(tempNmapFolder);
 
 	#if defined(_DEBUG)
 		#if defined(__clang__)

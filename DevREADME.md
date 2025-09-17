@@ -8,13 +8,13 @@ Unless you want to spent 2 days fixing it like I did?
 
 ## Building and running for changes
 For somereason if you use CMake: run without debugging before you CMake: Build after a change. It will run the Build 
-process but get stuff making the embedded_manifest.h, so just manually CMake:Build after every change and test.
+process but get stuck making the embedded_manifest.h, so just manually CMake:Build after every change and test.
 
 # Installations:
 - Vim (for xxd)
 - CMake
 - Ninja
-- LLVM (For clang and clang++)
+- LLVM (For clang and clang++) (Change CmakePresets to point to your clang/clang++ installation)
 
 # When upgrading nmap Version via CMake FetchContent
 Delete all contents in src/embedded/.

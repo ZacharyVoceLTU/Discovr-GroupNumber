@@ -19,6 +19,7 @@ enum class Choice {
 }; 
 
 int main() {
+	// TODO: Use RAII to handle deleting tempNmapFolder on unhandled exception
 	std::filesystem::path tempNmapFolder{ "tempNmap" };
 
 	createNmapFolder(tempNmapFolder);
@@ -28,7 +29,7 @@ int main() {
 	extractor->extract(tempNmapFolder);
 
 	#if defined(_DEBUG)
-		#if defined(__clang__)
+		#if defined(__clang__) 
 			std::cout << "Compiled with Clang!\n";
 		#elif defined(_MSC_VER)
 			std::cout << "Compiled with MSVC!\n";

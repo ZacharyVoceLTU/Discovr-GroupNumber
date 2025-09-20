@@ -4,12 +4,12 @@
 cmake_minimum_required (VERSION 3.20)
 project ("Discovr-GroupNumber" LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "Configuring for Windows...")
-
-    set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
     #  === Download Nmap ===
     include(FetchContent)

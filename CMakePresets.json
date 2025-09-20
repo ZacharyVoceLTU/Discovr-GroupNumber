@@ -7,7 +7,7 @@
       "description": "Uses a custom toolchain to bypass VS build issues.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "toolchainFile": "${sourceDir}/ClangToolchain.cmake",
+      "toolchainFile": "${sourceDir}/WindowsToolchain.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_FLAGS": "-std=c++20 -Wall -Wextra",

@@ -2,8 +2,8 @@
   "version": 4,
   "configurePresets": [
     {
-      "name": "developer-tools",
-      "displayName": "Developer Tools",
+      "name": "windows-developer-tools",
+      "displayName": "Developer Tools (Windows)",
       "description": "Uses a custom toolchain to bypass VS build issues.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -12,7 +12,39 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_FLAGS": "-std=c++20 -Wall -Wextra",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE"
+      },
+      "condition": {
+        "type": "equals", 
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
+    },
+    {
+      "name": "linux-developer-tools",
+      "displayName": "Developer Tools (Linux)",
+      "description": "Uses a custom Clang toolchain on Linux.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/developer-tools",
+      "toolchainFile": "${sourceDir}/ClangToolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-std=c++20 -Wall -Wextra",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "developer-tools",
+      "displayName": "Developer Tools",
+      "description": "Automaitcally selects Windows or Linux Configuration.",
+      "inherits": [
+        "windows-developer-tools",
+        "linux-developer-tools"
+      ]
     }
   ]
 }

@@ -8,9 +8,9 @@
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
-void menu(const std::filesystem::path& tempNmapFolder);
-void displayVersion(std::filesystem::path& nmapPath);
-void testScan(std::filesystem::path& nmapPath);
+void menu(const std::filesystem::path& nmapPath);
+void displayVersion(const std::filesystem::path& nmapPath);
+void testScan(const std::filesystem::path& nmapPath);
 
 enum class Choice {
 	Version = 1,
@@ -28,7 +28,16 @@ int main() {
 
 	extractor->extract(tempNmapFolder);
 
-	menu(tempNmapFolder);
+	std::filesystem::path nmapPath{ };
+	#if defined(_WIN64)
+		nmapPath = tempNmapFolder / "nmap.exe";
+	#elif defined(__linux__)
+		nmapPath = tempNmapFolder / "nmap";
+		std::string command{"chmod +x " + nmapPath.string()};
+		std::system(command.c_str());
+	#endif
+
+	menu(nmapPath);
 
 	deleteTempFolders(tempNmapFolder);
 
@@ -56,14 +65,7 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
 	}
 }
 
-void menu(const std::filesystem::path& tempNmapFolder) {
-	std::filesystem::path nmapPath{ }; 
-	#if defined(_WIN64)
-		nmapPath = tempNmapFolder / "nmap.exe";
-	#elif defined(__linux__)
-		nmapPath = tempNmapFolder / "nmap";
-	#endif
-	
+void menu(const std::filesystem::path& nmapPath) {
 	int input{ };
 	Choice userChoice{ };
 	while (userChoice != Choice::Quit) {
@@ -99,14 +101,19 @@ void menu(const std::filesystem::path& tempNmapFolder) {
 }
 
 // Currently just a test to see if nmap works
-void displayVersion(std::filesystem::path& nmapPath) {
+void displayVersion(const std::filesystem::path& nmapPath) {
 	std::string command{ "\"" + nmapPath.string() + "\" -version"};
 	std::system(command.c_str());
 	std::cout << '\n';
 }
 
-void testScan(std::filesystem::path& nmapPath) {
-	std::string command{ "\"" + nmapPath.string() + "\" -sV 127.0.0.1 -p 80"};
+void testScan(const std::filesystem::path& nmapPath) {
+	std::string prefix{""};
+	#if defined(__linux__)
+		prefix += "sudo ";
+	#endif
+	prefix += "\"";
+	std::string command{ prefix + nmapPath.string() + "\" -sV 127.0.0.1 -p 80"};
 	std::system(command.c_str());
 	std::cout << '\n';
 }

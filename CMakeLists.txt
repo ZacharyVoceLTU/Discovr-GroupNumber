@@ -21,7 +21,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     #  === Download Nmap For Windows ===
     FetchContent_Declare(
         nmap_binary
-        URL https://nmap.org/dist/nmap-792-win32.zip
+        URL https://nmap.org/dist/nmap-7.92-win32.zip
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(nmap_binary)

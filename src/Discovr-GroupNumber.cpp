@@ -57,7 +57,12 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
 }
 
 void menu(const std::filesystem::path& tempNmapFolder) {
-	std::filesystem::path nmapPath = tempNmapFolder / "nmap.exe";
+	std::filesystem::path nmapPath{ }; 
+	#if defined(_WIN64)
+		nmapPath = tempNmapFolder / "nmap.exe";
+	#elif defined(__linux__)
+		nmapPath = tempNmapFolder / "nmap";
+	#endif
 	
 	int input{ };
 	Choice userChoice{ };

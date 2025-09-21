@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include "Extractor.h"
-#include "../Nmapembedded/embedded_manifest.h"
+#include "../NmapEmbedded/embedded_manifest.h"
 
 void Extractor::extract(const std::filesystem::path& outputFolder) {
     for (auto& file : embedded_assets) {

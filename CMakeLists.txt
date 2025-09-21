@@ -11,7 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "Configuring for Windows...")
 
-    #  === Download Nmap ===
+    #  === Download Nmap For Windows ===
     include(FetchContent)
     FetchContent_Declare(
         nmap_binary
@@ -42,7 +42,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
         endif()
 
         file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
-        string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
+        string(REPLACE "/" "__" VAR_NAME_PATH ${REL_PATH})
         string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
         string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
         set(FULL_OUTPUT_PATH "${EMBEDDED_DIR}/${REL_PATH}_embedded.cpp")
@@ -93,7 +93,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
         endif()
 
         file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
-        string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
+        string(REPLACE "/" "__" VAR_NAME_PATH ${REL_PATH})
         string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
         string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
         string(APPEND HEADER_CONTENT_STRING "extern unsigned char ${VAR_NAME}[];\n")
@@ -115,7 +115,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
         endif()
 
         file(RELATIVE_PATH REL_PATH ${nmap_binary_SOURCE_DIR} ${FILE_TO_EMBED})
-        string(REPLACE "/" "_" VAR_NAME_PATH ${REL_PATH})
+        string(REPLACE "/" "__" VAR_NAME_PATH ${REL_PATH})
         string(REPLACE "-" "_" VAR_NAME ${VAR_NAME_PATH})
         string(REPLACE "." "_" VAR_NAME ${VAR_NAME})
         string(APPEND HEADER_CONTENT_STRING "   {\"${REL_PATH}\", ${VAR_NAME}, ${VAR_NAME}_len},\n")
@@ -137,9 +137,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     )
 
     # --- END: The single, correct block to generate the header ---
+
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    message(STATUS "Configuring for Linux...")
+    message(STATUS "Configuring for Linux")
 endif()
+
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
@@ -148,3 +150,17 @@ add_executable (Discovr-GroupNumber
     "${OUTPUT_HEADER}" # I know bad practice but it works for now
     "src/extractors/Extractor.cpp"
 )
+
+
+# Mark the generated files as generated so CMake knows they don't exist yet
+set_source_files_properties(${EMBEDDED_CPP_LIST} PROPERTIES GENERATED TRUE)
+set_source_files_properties("${OUTPUT_HEADER}" PROPERTIES GENERATED TRUE)
+
+# Create a custom target that generates all embedded files
+add_custom_target(generate_embedded_files
+    DEPENDS ${EMBEDDED_CPP_LIST} "${OUTPUT_HEADER}"
+    COMMENT "Generating all embedded files"
+)
+
+# Make sure the executable depends on the generation target
+add_dependencies(Discovr-GroupNumber generate_embedded_files)

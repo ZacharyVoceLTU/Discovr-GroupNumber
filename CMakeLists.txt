@@ -8,11 +8,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
+include(FetchContent)
+
+set(EMBEDDED_DIR ${CMAKE_SOURCE_DIR}/src/NmapEmbedded)
+file(MAKE_DIRECTORY "${EMBEDDED_DIR}")
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "Configuring for Windows...")
 
     #  === Download Nmap For Windows ===
-    include(FetchContent)
     FetchContent_Declare(
         nmap_binary
         URL https://nmap.org/dist/nmap-7.92-win32.zip
@@ -21,8 +25,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     FetchContent_MakeAvailable(nmap_binary)
 
     # === Master list of all files to embed ===
-    set(EMBEDDED_DIR ${CMAKE_SOURCE_DIR}/src/NmapEmbedded)
-    file(MAKE_DIRECTORY "${EMBEDDED_DIR}")
+    
 
     # Get a list of all files to embed. Be specific to avoid directories and unwanted files.
     file(GLOB_RECURSE NMAP_BINARY "${nmap_binary_SOURCE_DIR}/*")
@@ -59,9 +62,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
         list(APPEND EMBEDDED_CPP_LIST "${FULL_OUTPUT_PATH}")
     endforeach()
-
-    # The single output header file
-    set(OUTPUT_HEADER "${EMBEDDED_DIR}/embedded_manifest.h")
 
     # The single output header file
     set(OUTPUT_HEADER "${EMBEDDED_DIR}/embedded_manifest.h")
@@ -140,6 +140,45 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "Configuring for Linux")
+
+    FetchContent_Declare(
+        nmap_static
+        URL https://github.com/ZacharyVoceLTU/Discovr-GroupNumber-Binaries/releases/download/pre-release0.8/nmap_static.tar.gz
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(nmap_static)
+
+    set(NMAP_STATIC_DIR "${nmap_static_SOURCE_DIR}/nmap")
+
+    file(GLOB NMAP_STATIC "${nmap_static_SOURCE_DIR}/*")
+
+    set(MASTER_EMBED_FILES ${NMAP_STATIC})
+
+    get_filename_component(FILE_NAME ${NMAP_STATIC_DIR} NAME)
+    file(RELATIVE_PATH REL_PATH ${nmap_static_SOURCE_DIR} ${NMAP_STATIC_DIR})
+    set(FULL_OUTPUT_PATH "${EMBEDDED_DIR}/${REL_PATH}_embedded.cpp")
+
+    add_custom_command(
+        OUTPUT "${FULL_OUTPUT_PATH}"
+        COMMAND xxd -i -n ${REL_PATH} "${nmap_static_SOURCE_DIR}" > "${FULL_OUTPUT_PATH}"
+        DEPENDS "${NMAP_STATIC_DIR}"
+        COMMENT "Embedding: ${REL_PATH}"
+        VERBATIM
+    )
+
+     set(OUTPUT_HEADER "${EMBEDDED_DIR}/embedded_manifest.h")
+     set(TEMP_HEADER_PATH "${CMAKE_BINARY_DIR}/embedded_manifest.h.tmp")
+     file(WRITE "${TEMP_HEADER_PATH}" "Hello")
+
+     set(TEMP "Hello")
+
+     add_custom_command(
+        OUTPUT "${OUTPUT_HEADER}"
+        COMMAND ${CMAKE_COMMAND} -E copy ${TEMP_HEADER_PATH} "${OUTPUT_HEADER}"
+        DEPENDS ${MASTER_EMBED_FILES}
+        COMMENT "Generating embedded_manifest.h"
+     )
+
 endif()
 
 
@@ -155,6 +194,7 @@ add_executable (Discovr-GroupNumber
 # Mark the generated files as generated so CMake knows they don't exist yet
 set_source_files_properties(${EMBEDDED_CPP_LIST} PROPERTIES GENERATED TRUE)
 set_source_files_properties("${OUTPUT_HEADER}" PROPERTIES GENERATED TRUE)
+
 
 # Create a custom target that generates all embedded files
 add_custom_target(generate_embedded_files

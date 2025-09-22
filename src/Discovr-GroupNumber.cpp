@@ -10,11 +10,16 @@ void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
 void menu(const std::filesystem::path& nmapPath);
 void displayVersion(const std::filesystem::path& nmapPath);
-void testScan(const std::filesystem::path& nmapPath);
+void fullScan(const std::filesystem::path& nmapPath);
+void fastScan(const std::filesystem::path& nmapPath);
+void stealthScan(const std::filesystem::path& nmapPath);
+std::string getTargetFromUser();
 
 enum class Choice {
 	Version = 1,
-	TestScan,
+	FullScan,
+	FastScan,
+	StealthScan,
 	Quit
 }; 
 
@@ -66,12 +71,14 @@ void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
 }
 
 void menu(const std::filesystem::path& nmapPath) {
-	int input{ };
+	int input{ -1 };
 	Choice userChoice{ };
 	while (userChoice != Choice::Quit) {
 		std::cout << "1. Print nmap version\n"
-					 "2. Test Scan\n"
-					 "3. Quit\n"
+					 "2. Full Scan\n"
+					 "3. Fast Scan\n"
+					 "4. Stealth Scan\n"
+					 "0. Quit\n"
 					 "What do you want to do: ";
 
 		if (!(std::cin >> input)) {
@@ -91,8 +98,14 @@ void menu(const std::filesystem::path& nmapPath) {
 				break;
 			case Choice::Quit:
 				break;
-			case Choice::TestScan:
-				testScan(nmapPath);
+			case Choice::FullScan:
+				fullScan(nmapPath);
+				break;
+			case Choice::FastScan:
+				fastScan(nmapPath);
+				break;
+			case Choice::StealthScan:
+				stealthScan(nmapPath);
 				break;
 			default:
 				std::cout << "Unknown option!\n\n";
@@ -107,13 +120,58 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 	std::cout << '\n';
 }
 
-void testScan(const std::filesystem::path& nmapPath) {
+void fullScan(const std::filesystem::path& nmapPath) {
+	std::string target = getTargetFromUser();
+
+	std::cout << "Running full scan\n";
+	std::cout << "=================";
+	
 	std::string prefix{""};
 	#if defined(__linux__)
 		prefix += "sudo ";
 	#endif
 	prefix += "\"";
-	std::string command{ prefix + nmapPath.string() + "\" -sV 127.0.0.1 -p 80"};
+	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T3 -p 22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443,515,9100,161,16 " + target};
 	std::system(command.c_str());
 	std::cout << '\n';
+}
+
+void fastScan(const std::filesystem::path& nmapPath) {
+	std::string target = getTargetFromUser();
+
+	std::cout << "Running fast scan\n";
+	std::cout << "=================";
+	
+	std::string prefix{""};
+	#if defined(__linux__)
+		prefix += "sudo ";
+	#endif
+	prefix += "\"";
+	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T4 -p 22,80,443,135,445,3389 " + target};
+	std::system(command.c_str());
+	std::cout << '\n';
+}
+
+void stealthScan(const std::filesystem::path& nmapPath) {
+	std::string target = getTargetFromUser();
+
+	std::cout << "Running stealth scan\n";
+	std::cout << "====================";
+
+	std::string prefix{""};
+	#if defined(__linux__)
+		prefix += "sudo ";
+	#endif
+	prefix += "\"";
+	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T2 -p 22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443 " + target};
+	std::system(command.c_str());
+	std::cout << '\n';
+}
+
+std::string getTargetFromUser() {
+	std::cout << "What ip do you want to scan >> ";
+	std::string target{ };
+	std::cin >> target;
+
+	return target;
 }

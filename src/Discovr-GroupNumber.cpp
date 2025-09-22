@@ -53,7 +53,7 @@ int main() {
 void createNmapFolder(const std::filesystem::path& tempNmapFolder) {
 	try {
 		if (std::filesystem::create_directory(tempNmapFolder)) {
-			std::cout << "Temp Nmap fodler created successfully: " << tempNmapFolder << '\n';
+			std::cout << "Temp Nmap folder created successfully: " << tempNmapFolder << '\n';
 		} else {
 			std::cout << "Temp Nmap folder already exists" << '\n';
 		}
@@ -125,7 +125,7 @@ void fullScan(const std::filesystem::path& nmapPath) {
 	std::string target = getTargetFromUser();
 
 	std::cout << "Running full scan\n";
-	std::cout << "=================";
+	std::cout << "=================\n";
 	
 	std::string prefix{""};
 	#if defined(__linux__)
@@ -141,7 +141,7 @@ void fastScan(const std::filesystem::path& nmapPath) {
 	std::string target = getTargetFromUser();
 
 	std::cout << "Running fast scan\n";
-	std::cout << "=================";
+	std::cout << "=================\n";
 	
 	std::string prefix{""};
 	#if defined(__linux__)
@@ -157,10 +157,10 @@ void stealthScan(const std::filesystem::path& nmapPath) {
 	std::string target = getTargetFromUser();
 
 	std::cout << "Running stealth scan\n";
-	std::cout << "====================";
+	std::cout << "====================\n";
 
 	std::string prefix{""};
-	// SECURITY: Ask for user consent to use sudo
+	// SECURITY: Ask for user consent to use sudo, make very simple though
 	#if defined(__linux__) 
 		prefix += "sudo ";
 	#endif

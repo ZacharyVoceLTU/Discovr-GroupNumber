@@ -166,7 +166,7 @@ add_executable (Discovr-GroupNumber
 # Setting different executable names for different OS
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set_target_properties(Discovr-GroupNumber PROPERTIES
-        OUTPUT_NAME "Discovr-GroupNumber-Win.exe"
+        OUTPUT_NAME "Discovr-GroupNumber-Win"
     )
     # You can also add other Windows-specific properties here
     # Example: add_definitions(-DWIN32_LEAN_AND_MEAN)

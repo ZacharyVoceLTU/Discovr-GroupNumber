@@ -4,6 +4,7 @@
 #include <iostream>
 #include <filesystem>
 #include <memory>
+#include <limits>
 #include "extractors/Extractor.h"
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
@@ -159,11 +160,14 @@ void stealthScan(const std::filesystem::path& nmapPath) {
 	std::cout << "====================";
 
 	std::string prefix{""};
-	#if defined(__linux__)
+	// SECURITY: Ask for user consent to use sudo
+	#if defined(__linux__) 
 		prefix += "sudo ";
 	#endif
 	prefix += "\"";
 	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T2 -p 22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443 " + target};
+	// TODO: Implement Boost.process instead of using std::system
+	// SECURITY: Implement Error handling
 	std::system(command.c_str());
 	std::cout << '\n';
 }
@@ -173,5 +177,6 @@ std::string getTargetFromUser() {
 	std::string target{ };
 	std::cin >> target;
 
+	// SECURITY: Validate/Sanitise input before returning
 	return target;
 }

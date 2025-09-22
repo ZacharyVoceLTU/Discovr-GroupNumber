@@ -148,8 +148,12 @@ add_custom_command(
     DEPENDS ${MASTER_EMBED_FILES}
     COMMENT "Generating embedded_manifest.h"
 )
+# --- END: generated the header ---
 
-# --- END: The single, correct block to generate the header ---
+# Addig POSIX_C_SOURCE to be more portable for more Linux Distros
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(-D_POSIX_C_SOURCE)
+endif()
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber

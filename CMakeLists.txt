@@ -148,8 +148,12 @@ add_custom_command(
     DEPENDS ${MASTER_EMBED_FILES}
     COMMENT "Generating embedded_manifest.h"
 )
+# --- END: generated the header ---
 
-# --- END: The single, correct block to generate the header ---
+# Addig POSIX_C_SOURCE to be more portable for more Linux Distros
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(-D_POSIX_C_SOURCE)
+endif()
 
 # Add source to this project's executable.
 add_executable (Discovr-GroupNumber
@@ -159,6 +163,19 @@ add_executable (Discovr-GroupNumber
     "src/extractors/Extractor.cpp"
 )
 
+# Setting different executable names for different OS
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set_target_properties(Discovr-GroupNumber PROPERTIES
+        OUTPUT_NAME "Discovr-GroupNumber-Win.exe"
+    )
+    # You can also add other Windows-specific properties here
+    # Example: add_definitions(-DWIN32_LEAN_AND_MEAN)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set_target_properties(Discovr-GroupNumber PROPERTIES
+        OUTPUT_NAME "Discovr-GroupNumber-Linux"
+    )
+    # Example: add_definitions(-D_POSIX_C_SOURCE)
+endif()
 
 # Mark the generated files as generated so CMake knows they don't exist yet
 set_source_files_properties(${EMBEDDED_CPP_LIST} PROPERTIES GENERATED TRUE)

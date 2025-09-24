@@ -17,6 +17,7 @@ void stealthScan(const std::filesystem::path& nmapPath);
 std::string getTargetFromUser();
 
 enum class Choice {
+	// TODO_FIX: Setting Quit to 0 exits the menu straight away
 	Version = 1,
 	FullScan,
 	FastScan,

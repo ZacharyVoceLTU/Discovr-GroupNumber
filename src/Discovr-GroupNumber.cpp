@@ -16,8 +16,8 @@
 #endif
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
-void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
-void menu(const std::filesystem::path& nmapPath);
+void deleteFolderContents(const std::filesystem::path& path);
+void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath);
 void displayVersion(const std::filesystem::path& nmapPath);
 void fullScan(const std::filesystem::path& nmapPath);
 void fastScan(const std::filesystem::path& nmapPath);
@@ -25,7 +25,9 @@ void stealthScan(const std::filesystem::path& nmapPath);
 std::string getTargetFromUser();
 void installp0f();
 void uninstallp0f();
-void writeScripts();
+void writeScripts(const std::filesystem::path& scriptsPath);
+
+void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath);
 
 enum class Choice {
 	// TODO_FIX: Setting Quit to 0 exits the menu straight away
@@ -33,12 +35,14 @@ enum class Choice {
 	FullScan,
 	FastScan,
 	StealthScan,
+	FullScanBetter,
 	Quit
 }; 
 
 int main() {
 	// TODO: Use RAII to handle deleting tempNmapFolder on unhandled exception
-	std::filesystem::path tempNmapFolder{ "tempNmap" };
+	const std::filesystem::path tempNmapFolder{ "tempNmap" };
+	const std::filesystem::path scriptsPath{ "scripts"};
 
 	createNmapFolder(tempNmapFolder);
 	
@@ -56,14 +60,15 @@ int main() {
 		std::system(command.c_str());
 	#endif
 
-	writeScripts();
+	writeScripts(scriptsPath);
 
 	// NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake
 	installp0f();
 
-	menu(nmapPath);
+	menu(nmapPath, scriptsPath);
 
-	deleteTempFolders(tempNmapFolder);
+	deleteFolderContents(tempNmapFolder);
+	deleteFolderContents(scriptsPath);
 
 	// NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake
 	uninstallp0f();
@@ -83,16 +88,16 @@ void createNmapFolder(const std::filesystem::path& tempNmapFolder) {
 	}
 }
 
-void deleteTempFolders(const std::filesystem::path& tempNmapFolder) {
+void deleteFolderContents(const std::filesystem::path& path) {
 	try {
-		std::uintmax_t removedCount = std::filesystem::remove_all(tempNmapFolder);
-		std::cout << "Deleted " << removedCount << " files/folders.\n";
+		std::uintmax_t removedCount = std::filesystem::remove_all(path);
+		std::cout << "Deleted " << removedCount << " files/folders in: " << path.string() << '\n';
 	} catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Error deleting folder: " << e.what() << '\n';
 	}
 }
 
-void menu(const std::filesystem::path& nmapPath) {
+void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath) {
 	int input{ -1 };
 	Choice userChoice{ };
 	while (userChoice != Choice::Quit) {
@@ -100,6 +105,7 @@ void menu(const std::filesystem::path& nmapPath) {
 					 "2. Full Scan\n"
 					 "3. Fast Scan\n"
 					 "4. Stealth Scan\n"
+					 "5. Full Scan better\n"
 					 "0. Quit\n"
 					 "What do you want to do: ";
 
@@ -129,6 +135,9 @@ void menu(const std::filesystem::path& nmapPath) {
 			case Choice::StealthScan:
 				stealthScan(nmapPath);
 				break;
+			case Choice::FullScanBetter:
+				scan(nmapPath, scriptPath);
+				break;
 			default:
 				std::cout << "Unknown option!\n\n";
 		}
@@ -140,6 +149,13 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 	std::string command{ "\"" + nmapPath.string() + "\" -version"};
 	std::system(command.c_str());
 	std::cout << '\n';
+}
+
+void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath) {
+	std::string nmp{"/home/kali/Documents/Discovr-GroupNumber/out/build/developer-tools/tempNmap/nmap"};
+	std::string command{ "./" + scriptPath.string() + "/bannerScript.sh stealth " + scriptPath.string() + "/targets.txt " + nmp};
+	std::cout << command << '\n';
+	std::system(command.c_str());
 }
 
 // ./banner_grab.sh full targets.txt /usr/local/bin/nmap
@@ -203,24 +219,32 @@ std::string getTargetFromUser() {
 	return target;
 }
 
-void writeScripts() {
-
-	std::filesystem::path scriptsPath("scripts");
+void writeScripts(const std::filesystem::path& scriptsPath) {
 	try {
 		std::filesystem::create_directory(scriptsPath);
 	} catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Error creating directory " << "scripts" << " : " << e.what() << '\n';
 	}
 
-	std::string fileName(scriptsPath / "bannerScript.sh");
+	std::string scriptFileName(scriptsPath / "bannerScript.sh");
+	std::string targetFileName(scriptsPath / "targets.txt");
 
-	std::ofstream scriptFile(fileName);
+	std::ofstream scriptFile(scriptFileName);
+	std::ofstream targetFile(targetFileName);
 
 	if (!scriptFile) {
-		throw std::runtime_error("Failed to open file: " + fileName + " for writing: scripts/");
+		throw std::runtime_error("Failed to open file: " + scriptFileName + " for writing: scripts/");
+	}
+	if (!targetFile) {
+		throw std::runtime_error("Failed to open file: " + targetFileName + " for writing: scripts/");
 	}
 
 	scriptFile.write(bannerScript.data(), bannerScript.size());
+	std::string localIP{"127.0.0.1\n"};
+	targetFile.write(localIP.data(), localIP.size());
+
+	std::string command{ "chmod +x " + scriptFileName };
+	std::system(command.c_str());
 }
 
 // NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake

@@ -72,46 +72,56 @@ get_role() {
 while IFS= read -r TARGET; do
   [ -z "$TARGET" ] && continue
 
+  echo "Attempting to run Nmap..."
+  echo "Nmap path is: $NMAP_PATH"
+  echo "Nmap command is: sudo $NMAP_PATH $SPEED -Pn --reason -p\"$PORTS\" \"$TARGET\" -oG -"
+
   echo
   echo "========== TARGET: $TARGET =========="
   echo "--- $MODE SCAN ---"
 
   # Resolve hostname
-  HOSTNAME=$(nslookup "$TARGET" 2>/dev/null | awk -F'= ' '/name/ {gsub(/\.$/,"",\$2); print \$2}')
+  HOSTNAME=$(nslookup "$TARGET" 2>/dev/null | awk -F'= ' '/name/ {gsub(/\.$/,"",$2); print $2}')
   [ -z "$HOSTNAME" ] && HOSTNAME="$TARGET"
 
   # Detect OS using Nmap
-  OS=$($NMAP_PATH -O -Pn "$TARGET" 2>/dev/null | grep "OS details" | awk -F': ' '{print \$2}') # <--- MODIFIED: Use NMAP_PATH variable
+  OS=$($NMAP_PATH -O -Pn "$TARGET" 2>/dev/null | grep "OS details" | awk -F': ' '{print $2}') # <--- MODIFIED: Use NMAP_PATH variable
   [ -z "$OS" ] && OS="Unknown"
 
+
+
   # Run Nmap scan
-  $NMAP_PATH $SPEED -Pn --reason -p"$PORTS" "$TARGET" -oG - | while read -r line; do # <--- MODIFIED: Use NMAP_PATH variable
-    if [[ $line == *Ports* ]]; then
-      IP=$(echo "$line" | awk '{print $2}')
-      PORTS_INFO=$(echo "$line" | grep -oP '\\d+/(open|closed|filtered)/\\S+')
+  # Run Nmap scan and store the output in a variable
+NMAP_OUTPUT=$(sudo "$NMAP_PATH" $SPEED -Pn --reason -p"$PORTS" "$TARGET" -oG -)
 
-      for PORTINFO in $PORTS_INFO; do
-        PORT=$(echo "$PORTINFO" | cut -d/ -f1)
-        STATE=$(echo "$PORTINFO" | cut -d/ -f2)
-        SERVICE=$(echo "$PORTINFO" | cut -d/ -f3)
+# Now, parse the output line by line
+while read -r line; do
+  if [[ $line == *Ports* ]]; then
+    IP=$(echo "$line" | awk '{print $2}')
+    PORTS_INFO=$(echo "$line" | grep -oP '\d+/(open|closed|filtered)/\S+')
 
-        # Grab banner only if open
-        if [ "$STATE" == "open" ]; then
-          BANNER=$(echo | nc -w1 "$TARGET" "$PORT" 2>/dev/null | tr '\r\n' ' ')
-        else
-          BANNER="N/A"
-        fi
+    for PORTINFO in $PORTS_INFO; do
+      PORT=$(echo "$PORTINFO" | cut -d/ -f1)
+      STATE=$(echo "$PORTINFO" | cut -d/ -f2)
+      SERVICE=$(echo "$PORTINFO" | cut -d/ -f3)
 
-        ROLE=$(get_role "$PORT")
+      # Grab banner only if open
+      if [ "$STATE" == "open" ]; then
+        BANNER=$(echo | nc -w1 "$TARGET" "$PORT" 2>/dev/null | tr '\r\n' ' ')
+      else
+        BANNER="N/A"
+      fi
 
-        # Print console output
-        echo "[$IP] Port $PORT ($STATE) - Service: $SERVICE - Banner: $BANNER - Role: $ROLE"
+      ROLE=$(get_role "$PORT")
 
-        # Append to CSV
-        echo "\"$IP\",\"$HOSTNAME\",\"$OS\",\"$ROLE\",\"$MODE\",\"$PORT\",\"$STATE\",\"$SERVICE\",\"$BANNER\"" >> "$OUTPUT"
-      done
-    fi
-  done
+      # Print console output
+      echo "[$IP] Port $PORT ($STATE) - Service: $SERVICE - Banner: $BANNER - Role: $ROLE"
+
+      # Append to CSV
+      echo "\"$IP\",\"$HOSTNAME\",\"$OS\",\"$ROLE\",\"$MODE\",\"$PORT\",\"$STATE\",\"$SERVICE\",\"$BANNER\"" >> "$OUTPUT"
+    done
+  fi
+done <<< "$NMAP_OUTPUT"
 
   echo "========== END TARGET: $TARGET =========="
 

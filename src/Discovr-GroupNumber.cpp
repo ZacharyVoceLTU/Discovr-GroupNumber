@@ -193,15 +193,15 @@ std::string getTargetFromUser() {
 void installp0f() {
 	#if defined(__linux__)
 		std::system("sudo apt install p0f");
-	#elif defined(win64)
-		std::cout << "Not supported on Windows yet\n";
+	#elif defined(_WIN64)
+		std::cout << "p0f not supported on Windows yet\n";
 	#endif
 }
 
 void uninstallp0f() {
 	#if defined(__linux__)
 		std::system("sudo apt purge p0f");
-	#elif defined(win64)
-		std::cout << "Not supported on Windows yet\n";
+	#elif defined(_WIN64)
+		std::cout << "p0f not supported on Windows yet\n";
 	#endif
 }

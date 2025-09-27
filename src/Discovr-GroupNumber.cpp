@@ -19,15 +19,12 @@ void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void deleteFolderContents(const std::filesystem::path& path);
 void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath);
 void displayVersion(const std::filesystem::path& nmapPath);
-void fullScan(const std::filesystem::path& nmapPath);
-void fastScan(const std::filesystem::path& nmapPath);
-void stealthScan(const std::filesystem::path& nmapPath);
 std::string getTargetFromUser();
 void installp0f();
 void uninstallp0f();
 void writeScripts(const std::filesystem::path& scriptsPath);
 
-void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath);
+void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath, const std::string& scanType);
 
 enum class Choice {
 	// TODO_FIX: Setting Quit to 0 exits the menu straight away
@@ -105,7 +102,6 @@ void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 					 "2. Full Scan\n"
 					 "3. Fast Scan\n"
 					 "4. Stealth Scan\n"
-					 "5. Full Scan better\n"
 					 "0. Quit\n"
 					 "What do you want to do: ";
 
@@ -127,16 +123,13 @@ void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 			case Choice::Quit:
 				break;
 			case Choice::FullScan:
-				fullScan(nmapPath);
+				scan(nmapPath, scriptPath, "full");
 				break;
 			case Choice::FastScan:
-				fastScan(nmapPath);
+				scan(nmapPath, scriptPath, "fast");
 				break;
 			case Choice::StealthScan:
-				stealthScan(nmapPath);
-				break;
-			case Choice::FullScanBetter:
-				scan(nmapPath, scriptPath);
+				scan(nmapPath, scriptPath, "stealth");
 				break;
 			default:
 				std::cout << "Unknown option!\n\n";
@@ -151,63 +144,11 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 	std::cout << '\n';
 }
 
-void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath) {
+void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath, const std::string& scanType) {
 	std::string nmp{"/home/kali/Documents/Discovr-GroupNumber/out/build/developer-tools/tempNmap/nmap"};
-	std::string command{ "./" + scriptPath.string() + "/bannerScript.sh stealth " + scriptPath.string() + "/targets.txt " + nmp};
+	std::string command{ "./" + scriptPath.string() + "/bannerScript.sh " + scanType + " " + scriptPath.string() + "/targets.txt " + nmp};
 	std::cout << command << '\n';
 	std::system(command.c_str());
-}
-
-// ./banner_grab.sh full targets.txt /usr/local/bin/nmap
-void fullScan(const std::filesystem::path& nmapPath) {
-	std::string target = getTargetFromUser();
-
-	std::cout << "Running full scan\n";
-	std::cout << "=================\n";
-	
-	std::string prefix{""};
-	#if defined(__linux__)
-		prefix += "sudo ";
-	#endif
-	prefix += "\"";
-	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T3 -p 22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443,515,9100,161,16 " + target};
-	std::system(command.c_str());
-	std::cout << '\n';
-}
-
-void fastScan(const std::filesystem::path& nmapPath) {
-	std::string target = getTargetFromUser();
-
-	std::cout << "Running fast scan\n";
-	std::cout << "=================\n";
-	
-	std::string prefix{""};
-	#if defined(__linux__)
-		prefix += "sudo ";
-	#endif
-	prefix += "\"";
-	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T4 -p 22,80,443,135,445,3389 " + target};
-	std::system(command.c_str());
-	std::cout << '\n';
-}
-
-void stealthScan(const std::filesystem::path& nmapPath) {
-	std::string target = getTargetFromUser();
-
-	std::cout << "Running stealth scan\n";
-	std::cout << "====================\n";
-
-	std::string prefix{""};
-	// SECURITY: Ask for user consent to use sudo, make very simple though
-	#if defined(__linux__) 
-		prefix += "sudo ";
-	#endif
-	prefix += "\"";
-	std::string command{ prefix + nmapPath.string() + "\" -sV -Pn -T2 -p 22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443 " + target};
-	// TODO: Implement Boost.process instead of using std::system
-	// SECURITY: Implement Error handling
-	std::system(command.c_str());
-	std::cout << '\n';
 }
 
 std::string getTargetFromUser() {

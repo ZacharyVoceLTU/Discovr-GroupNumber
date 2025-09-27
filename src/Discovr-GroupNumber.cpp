@@ -145,8 +145,7 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 }
 
 void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath, const std::string& scanType) {
-	std::string nmp{"/home/kali/Documents/Discovr-GroupNumber/out/build/developer-tools/tempNmap/nmap"};
-	std::string command{ "./" + scriptPath.string() + "/bannerScript.sh " + scanType + " " + scriptPath.string() + "/targets.txt " + nmp};
+	std::string command{ "./" + scriptPath.string() + "/bannerScript.sh " + scanType + " " + scriptPath.string() + "/targets.txt " + nmapPath.string()};
 	std::cout << command << '\n';
 	std::system(command.c_str());
 }
@@ -167,8 +166,8 @@ void writeScripts(const std::filesystem::path& scriptsPath) {
 		std::cerr << "Error creating directory " << "scripts" << " : " << e.what() << '\n';
 	}
 
-	std::string scriptFileName(scriptsPath / "bannerScript.sh");
-	std::string targetFileName(scriptsPath / "targets.txt");
+	std::string scriptFileName((scriptsPath / "bannerScript.sh").string());
+	std::string targetFileName((scriptsPath / "targets.txt").string());
 
 	std::ofstream scriptFile(scriptFileName);
 	std::ofstream targetFile(targetFileName);

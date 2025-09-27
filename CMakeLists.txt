@@ -35,6 +35,9 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(nmap_binary)
+else ()
+    message(STATUS "Your OS (${CMAKE_SYSTEM_NAME}) is not supported")
+    message(STATUS "Aborting configuration")
 endif()
 
 # === Master list of all files to embed ===
@@ -45,8 +48,6 @@ file(GLOB_RECURSE NMAP_BINARY "${nmap_binary_SOURCE_DIR}/*")
 
 # Combine all lists into a single master list
 set(MASTER_EMBED_FILES ${NMAP_BINARY})
-
-
 
 # === Single loop to process all files ===
 foreach(FILE_TO_EMBED ${MASTER_EMBED_FILES})

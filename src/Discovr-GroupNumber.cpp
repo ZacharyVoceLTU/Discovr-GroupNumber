@@ -145,7 +145,11 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 }
 
 void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath, const std::string& scanType) {
-	std::string command{ "./" + scriptPath.string() + "/bannerScript.sh " + scanType + " " + scriptPath.string() + "/targets.txt " + nmapPath.string()};
+	#if defined(__linux__)
+		std::string command{ "./" + scriptPath.string() + "/bannerScript.sh " + scanType + " " + scriptPath.string() + "/targets.txt " + nmapPath.string()};
+	#elif defined(_WIN64)
+		std::string command{ "" };
+	#endif
 	std::cout << command << '\n';
 	std::system(command.c_str());
 }
@@ -183,8 +187,10 @@ void writeScripts(const std::filesystem::path& scriptsPath) {
 	std::string localIP{"127.0.0.1\n"};
 	targetFile.write(localIP.data(), localIP.size());
 
-	std::string command{ "chmod +x " + scriptFileName };
-	std::system(command.c_str());
+	#if defined(__linux__)
+		std::string command{ "chmod +x " + scriptFileName };
+		std::system(command.c_str());
+	#endif
 }
 
 // NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake

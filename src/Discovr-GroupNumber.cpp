@@ -15,6 +15,8 @@ void fullScan(const std::filesystem::path& nmapPath);
 void fastScan(const std::filesystem::path& nmapPath);
 void stealthScan(const std::filesystem::path& nmapPath);
 std::string getTargetFromUser();
+void installp0f();
+void uninstallp0f();
 
 enum class Choice {
 	// TODO_FIX: Setting Quit to 0 exits the menu straight away
@@ -35,6 +37,9 @@ int main() {
 
 	extractor->extract(tempNmapFolder);
 
+	// NOT RECOMMENDED for production, I understand not professional or recommended but for prototype sake
+	installp0f();
+
 	std::filesystem::path nmapPath{ };
 	#if defined(_WIN64)
 		nmapPath = tempNmapFolder / "nmap.exe";
@@ -47,6 +52,9 @@ int main() {
 	menu(nmapPath);
 
 	deleteTempFolders(tempNmapFolder);
+
+	// NOT RECOMMENDED for production, I understand not professional or recommended but for prototype sake
+	uninstallp0f();
 
 	return 0;
 }
@@ -180,4 +188,20 @@ std::string getTargetFromUser() {
 
 	// SECURITY: Validate/Sanitise input before returning
 	return target;
+}
+
+void installp0f() {
+	#if defined(__linux__)
+		std::system("sudo apt install p0f");
+	#elif defined(win64)
+		std::cout << "Not supported on Windows yet\n";
+	#endif
+}
+
+void uninstallp0f() {
+	#if defined(__linux__)
+		std::system("sudo apt purge p0f");
+	#elif defined(win64)
+		std::cout << "Not supported on Windows yet\n";
+	#endif
 }

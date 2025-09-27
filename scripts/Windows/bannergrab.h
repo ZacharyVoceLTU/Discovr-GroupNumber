@@ -4,7 +4,7 @@
 
 // For Windows
 
-std::string bannerScript{R"(@echo off
+inline const std::string bannerScript{R"(@echo off
 REM ================================================================
 REM banner_grab.bat – Windows Batch Version
 REM Usage:

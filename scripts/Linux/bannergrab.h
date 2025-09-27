@@ -1,10 +1,10 @@
 #pragma once
 
-#import <string>
+#include <string>
 
 // For Linux
 
-const std::string bannerScript{R"(#!/bin/bash
+inline const std::string bannerScript{R"(#!/bin/bash
 #
 # banner_grab.sh – Banner grab with CSV output, optimized stealth scan
 # Usage:

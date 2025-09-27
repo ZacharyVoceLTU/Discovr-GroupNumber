@@ -144,12 +144,15 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 }
 
 void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath, const std::string& scanType) {
+	// SECURITY: Some nmap scans need sudo, ask for user consent to use sudo
 	#if defined(__linux__)
 		std::string command{ "./" + scriptPath.string() + "/bannerScript.sh " + scanType + " " + scriptPath.string() + "/targets.txt " + nmapPath.string()};
 	#elif defined(_WIN64)
 		std::string command{ "" };
 	#endif
 	std::cout << command << '\n';
+	// TODO: Implement Boost.process instead of using std::system
+	// SECURITY: Implement Error handling
 	std::system(command.c_str());
 }
 

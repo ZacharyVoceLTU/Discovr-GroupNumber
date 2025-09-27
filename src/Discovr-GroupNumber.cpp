@@ -1,11 +1,19 @@
 ﻿// Discovr-GroupNumber.cpp : Defines the entry point for the application.
 //
 
+#include <fstream>
 #include <iostream>
 #include <filesystem>
 #include <memory>
 #include <limits>
+#include <stdexcept>
 #include "extractors/Extractor.h"
+
+#if defined(__linux__)
+	#include "../scripts/Linux/bannergrab.h"
+#elif defined(_WIN64)
+	#include "../scripts/Windows/bannergrab.h"
+#endif
 
 void createNmapFolder(const std::filesystem::path& tempNmapFolder);
 void deleteTempFolders(const std::filesystem::path& tempNmapFolder);
@@ -17,6 +25,7 @@ void stealthScan(const std::filesystem::path& nmapPath);
 std::string getTargetFromUser();
 void installp0f();
 void uninstallp0f();
+void writeScripts();
 
 enum class Choice {
 	// TODO_FIX: Setting Quit to 0 exits the menu straight away
@@ -37,9 +46,7 @@ int main() {
 
 	extractor->extract(tempNmapFolder);
 
-	// NOT RECOMMENDED for production, I understand not professional or recommended but for prototype sake
-	installp0f();
-
+	// Defining nmap path and setting changemode on Linux
 	std::filesystem::path nmapPath{ };
 	#if defined(_WIN64)
 		nmapPath = tempNmapFolder / "nmap.exe";
@@ -49,11 +56,16 @@ int main() {
 		std::system(command.c_str());
 	#endif
 
+	writeScripts();
+
+	// NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake
+	installp0f();
+
 	menu(nmapPath);
 
 	deleteTempFolders(tempNmapFolder);
 
-	// NOT RECOMMENDED for production, I understand not professional or recommended but for prototype sake
+	// NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake
 	uninstallp0f();
 
 	return 0;
@@ -130,6 +142,7 @@ void displayVersion(const std::filesystem::path& nmapPath) {
 	std::cout << '\n';
 }
 
+// ./banner_grab.sh full targets.txt /usr/local/bin/nmap
 void fullScan(const std::filesystem::path& nmapPath) {
 	std::string target = getTargetFromUser();
 
@@ -190,6 +203,27 @@ std::string getTargetFromUser() {
 	return target;
 }
 
+void writeScripts() {
+
+	std::filesystem::path scriptsPath("scripts");
+	try {
+		std::filesystem::create_directory(scriptsPath);
+	} catch (const std::filesystem::filesystem_error& e) {
+		std::cerr << "Error creating directory " << "scripts" << " : " << e.what() << '\n';
+	}
+
+	std::string fileName(scriptsPath / "bannerScript.sh");
+
+	std::ofstream scriptFile(fileName);
+
+	if (!scriptFile) {
+		throw std::runtime_error("Failed to open file: " + fileName + " for writing: scripts/");
+	}
+
+	scriptFile.write(bannerScript.data(), bannerScript.size());
+}
+
+// NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake
 void installp0f() {
 	#if defined(__linux__)
 		std::system("sudo apt install p0f");
@@ -198,6 +232,7 @@ void installp0f() {
 	#endif
 }
 
+// NOT RECOMMENDED OR FINALISED for production, I understand not professional or recommended but for prototype sake
 void uninstallp0f() {
 	#if defined(__linux__)
 		std::system("sudo apt purge p0f");

@@ -32,7 +32,6 @@ enum class Choice {
 	FullScan,
 	FastScan,
 	StealthScan,
-	FullScanBetter,
 	Quit
 }; 
 

@@ -29,14 +29,13 @@ void startP0f();
 void stopP0f();
 
 enum class Choice {
-	// TODO_FIX: Setting Quit to 0 exits the menu straight away
 	Version = 1,
 	FullScan,
 	FastScan,
 	StealthScan,
 	StartP0f,
 	StopP0f,
-	Quit
+	Quit = 0
 }; 
 
 int main() {
@@ -99,7 +98,7 @@ void deleteFolderContents(const std::filesystem::path& path) {
 
 void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath) {
 	int input{ -1 };
-	Choice userChoice{ };
+	Choice userChoice{ static_cast<Choice>(-1)  };
 	while (userChoice != Choice::Quit) {
 		std::cout << "1. Print nmap version\n"
 					 "2. Full Scan\n"

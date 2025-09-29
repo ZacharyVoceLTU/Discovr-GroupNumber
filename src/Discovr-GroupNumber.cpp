@@ -25,6 +25,8 @@ void uninstallp0f();
 void writeScripts(const std::filesystem::path& scriptsPath);
 
 void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& scriptPath, const std::string& scanType);
+void startP0f();
+void stopP0f();
 
 enum class Choice {
 	// TODO_FIX: Setting Quit to 0 exits the menu straight away
@@ -32,6 +34,8 @@ enum class Choice {
 	FullScan,
 	FastScan,
 	StealthScan,
+	StartP0f,
+	StopP0f,
 	Quit
 }; 
 
@@ -101,6 +105,8 @@ void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 					 "2. Full Scan\n"
 					 "3. Fast Scan\n"
 					 "4. Stealth Scan\n"
+					 "5. Start p0f passive scan\n"
+					 "6. Stop p0f passive scan\n"
 					 "0. Quit\n"
 					 "What do you want to do: ";
 
@@ -130,6 +136,12 @@ void menu(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 			case Choice::StealthScan:
 				scan(nmapPath, scriptPath, "stealth");
 				break;
+			case Choice::StartP0f:
+				startP0f();
+				break;
+			case Choice::StopP0f:
+				stopP0f();
+				break;
 			default:
 				std::cout << "Unknown option!\n\n";
 		}
@@ -154,6 +166,25 @@ void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 	// TODO: Implement Boost.process instead of using std::system
 	// SECURITY: Implement Error handling
 	std::system(command.c_str());
+}
+
+void startP0f() {
+	#if defined(__linux__)
+		std::cout << "Starting p0f Scan...\n";
+		// ">/dev/null" redirects the nohup notification to a file that discards everything written to it
+		std::system("nohup sudo p0f -i lo -p -o p0f_log.txt >/dev/null 2>&1 &");
+	#elif defined(_WIN64)
+		std::cout << "p0f not supported on Windows yet\n";
+	#endif
+}
+
+void stopP0f() {
+	#if defined(__linux__)
+		std::cout << "Stopping p0f Scan...\n";
+		std::system("sudo pkill p0f");
+	#elif defined(_WIN64)
+		std::cout << "p0f not supported on Windows yet\n";
+	#endif
 }
 
 std::string getTargetFromUser() {

@@ -171,7 +171,7 @@ void startP0f() {
 	#if defined(__linux__)
 		std::cout << "Starting p0f Scan...\n";
 		// ">/dev/null" redirects the nohup notification to a file that discards everything written to it
-		std::system("nohup sudo p0f -i lo -p -o p0f_log.txt >/dev/null 2>&1 &");
+		std::system("nohup sudo p0f -i any -p -o p0f_log.txt >/dev/null 2>&1 &");
 	#elif defined(_WIN64)
 		std::cout << "p0f not supported on Windows yet\n";
 	#endif

@@ -168,7 +168,6 @@ void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 
 	command += scriptPathFile.string() + " " + scanType + " " + targetPath.string() + " " + nmapPath.string();
 
-	std::cout << command << '\n';
 	// TODO: Implement Boost.process instead of using std::system
 	// SECURITY: Implement Error handling
 	std::system(command.c_str());

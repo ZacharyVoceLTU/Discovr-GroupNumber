@@ -20,6 +20,10 @@ set "TYPE=%1"
 set "TARGET_FILE=%2"
 set "NMAP=%3"
 
+set "FAST_PORTS=22,80,443,135,445,3389"
+set "FULL_PORTS=22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443,515,9100,161,162"
+set "STEALTH_PORTS=22,80,443,135,139,445,3389,5985,5986,25,53,389,636,1433,3306,5432,8080,8443"
+
 if "%TYPE%"=="" (
   echo Usage: banner_grab.bat [fast^|full^|stealth] targets.txt
   exit /b 1
@@ -43,13 +47,13 @@ echo "IP","Hostname","OS","Role","ScanType","Port","State","Service","Banner" > 
 for /f "usebackq delims=" %%T in ("%TARGET_FILE%") do (
   echo [*] Scanning %%T with %TYPE%...
   if /i "%TYPE%"=="fast" (
-    "%NMAP%" -T4 -F -sV -oG "scan_results\%%T_fast.gnmap" %%T
+    "%NMAP%" -T4 -p"%FAST_PORTS%" -sV -oG "scan_results\%%T_fast.gnmap" %%T
     call :ParseGNMAP "scan_results\%%T_fast.gnmap" "%%T" "%TYPE%"
   ) else if /i "%TYPE%"=="full" (
-    "%NMAP%" -T4 -p- -sV -oG "scan_results\%%T_full.gnmap" %%T
+    "%NMAP%" -T4 -p"%FULL_PORTS%" -sV -oG "scan_results\%%T_full.gnmap" %%T
     call :ParseGNMAP "scan_results\%%T_full.gnmap" "%%T" "%TYPE%"
   ) else if /i "%TYPE%"=="stealth" (
-    "%NMAP%" -sS -sV -T2 -oG "scan_results\%%T_stealth.gnmap" %%T
+    "%NMAP%" -sS -sV -T2 -p"%STEALTH_PORTS%" -oG "scan_results\%%T_stealth.gnmap" %%T
     call :ParseGNMAP "scan_results\%%T_stealth.gnmap" "%%T" "%TYPE%"
   ) else (
     echo Unknown scan type %TYPE%
@@ -74,7 +78,7 @@ if not exist "%GNFILE%" (
 )
 
 REM parse lines that contain "Ports:"
-for /f "usebackq tokens=* delims=" %%L in (findstr /C:"Ports:" "%GNFILE%") do (
+for /f "usebackq tokens=* delims=" %%L in ('cmd /c "findstr /C:"Ports:" "%GNFILE%" "') do (
     REM example matched line:
     REM Host: 192.168.56.105 ()  Ports: 80/open/tcp//http///
     REM extract the Ports: field content

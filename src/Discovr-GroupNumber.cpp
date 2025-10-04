@@ -209,7 +209,12 @@ void writeScripts(const std::filesystem::path& scriptsPath) {
 		std::cerr << "Error creating directory " << "scripts" << " : " << e.what() << '\n';
 	}
 
-	std::string scriptFileName((scriptsPath / "bannerScript.sh").string());
+	std::string scriptFileName{ };
+	#if defined(__linux__)
+		scriptFileName = (scriptsPath / "bannerScript.sh").string();
+	#elif defined(_WIN64)
+		scriptFileName = (scriptsPath / "bannerScript.bat").string();
+	#endif
 	std::string targetFileName((scriptsPath / "targets.txt").string());
 
 	std::ofstream scriptFile(scriptFileName);

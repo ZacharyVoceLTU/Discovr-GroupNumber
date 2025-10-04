@@ -7,6 +7,7 @@
 #include "../NmapEmbedded/embedded_manifest.h"
 
 void Extractor::extract(const std::filesystem::path& outputFolder) {
+    std::cout << "Creating nmap files\n";
     for (auto& file : embedded_assets) {
         std::filesystem::path full_Path(file.name);
         std::filesystem::path parent_path = full_Path.parent_path();
@@ -14,7 +15,6 @@ void Extractor::extract(const std::filesystem::path& outputFolder) {
         if (!parent_path.empty()) {
             try {
                 std::filesystem::create_directories(outputFolder / parent_path);
-                std::cout << "Created directories: " << parent_path << '\n';
             } catch (const std::filesystem::filesystem_error& e) {
                 std::cerr << "Error creating directory " << parent_path << " : " << e.what() << '\n';
                 continue;
@@ -29,4 +29,5 @@ void Extractor::extract(const std::filesystem::path& outputFolder) {
 
         outFile.write(reinterpret_cast<const char*>(file.data), file.length);
     }
+    std::cout << "Finished creating nmap files\n";
 }

@@ -15,10 +15,10 @@ REM ================================================================
 
 :: If nmap.exe is NOT in your PATH, set full path here, e.g.
 :: set "NMAP=C:\Program Files (x86)\Nmap\nmap.exe"
-set "NMAP=nmap.exe"
 
 set "TYPE=%1"
 set "TARGET_FILE=%2"
+set "NMAP=%3"
 
 if "%TYPE%"=="" (
   echo Usage: banner_grab.bat [fast^|full^|stealth] targets.txt

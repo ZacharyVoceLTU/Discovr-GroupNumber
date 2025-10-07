@@ -160,7 +160,7 @@ Excel showing Account IDs in scientific notation.
 
 🧰 Error Handling & Logs
 
-Runtime logging (ECS-44) records scan events and errors in /logs/:
+Runtime logging records scan events and errors in /logs/:
 
 [2025-10-07 19:20:32] INFO – Azure discovery completed (3 VMs found)  
 [2025-10-07 19:20:34] ERROR – Invalid AWS credentials detected
@@ -185,21 +185,23 @@ src/extractors/Extractor.cpp	Processes and exports discovery results
 src/Discovr-GroupNumber.cpp	CLI logic and entry point
 🧾 Known Issues / Future Work
 
-Implement live Azure discovery (ECS-40 continuation)
+Implement live Azure discovery
 
 Add HTML export feature
 
-Strengthen runtime logging and CLI error handling (ECS-44 / ECS-29)
+Strengthen runtime logging and CLI error handling
 
-Package portable binary for final release (Sprint 5)
+Package portable binary for final release 
 
 📚 Team & Roles
 Name	Role
-Zachary Voce	Project Lead / Developer
-Christopher Cedillo	Tester / QA Engineer
-Jagsir Chugha	Research & Deployment Engineer
-Swayam Patel	Security Analyst
-Mohameddek Hassan	Documentation & Communications
+
+Zachary Voce-Project Lead / Developer
+
+Christopher Cedillo-Tester / QA Engineer
+Jagsir Chugha-Research & Deployment Engineer
+Swayam Patel-Security Analyst
+Mohameddek Hassan-Documentation & Communications
 
 Read [DevREADME.md](DevREADME.md)
 

@@ -1,7 +1,7 @@
 # Discovr-GroupNumber
 Discovr – Lightweight Asset Discovery Tool
 
-Developed by La Trobe University students in collaboration with Triskele Labs as part of the 2024 Capstone Project.
+Developed by La Trobe University students in collaboration with Triskele Labs as part of the 2025 Capstone Project.
 Discovr identifies IT assets across on-premises and hybrid-cloud environments (AWS & Azure) to improve visibility and reduce security blind spots.
 
 ⚙️ Setup / Installation

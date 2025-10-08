@@ -170,7 +170,11 @@ void scan(const std::filesystem::path& nmapPath, const std::filesystem::path& sc
 
 	// TODO: Implement Boost.process instead of using std::system
 	// SECURITY: Implement Error handling
-	std::system(command.c_str());
+	int result{ std::system(command.c_str()) };
+
+	if (result != 0) {
+		std::cerr << "Something went wrong with the scan\n";
+	}
 }
 
 void startP0f() {
